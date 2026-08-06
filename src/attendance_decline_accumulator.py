@@ -18,4 +18,8 @@ class AttendanceDeclineAccumulator:
         if len(events_response.data)==0:
             return DeclineReport("Group has no events (worship services)", [])
 
+        people_response = self.http_client.get_people(group_id, 0, 25)
+        if len(people_response.data)==0:
+            return DeclineReport("Group has no people", [])
+
         return DeclineReport(None, [])
