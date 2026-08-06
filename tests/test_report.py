@@ -50,22 +50,10 @@ class TestReport:
         #Assert
         assert actual_report.error_message=="Group not found"
 
-    def testReport_groupExistsWithNoEvents_expectErrorMsg(self):
-        groupResponse = GroupsGetResponseBuilder().add_group(1, "St. James Attendance").build()
-        eventsResponse = GroupEventsGetResponseBuilder().build()
-        client = FakePlanningCenterClient(groupResponse, None, eventsResponse)
-        accumulator = AttendanceDeclineAccumulator(client)
-
-        #Act
-        actual_report = accumulator.get_members_with_declining_attendance("St. James Attendance")
-
-        #Assert
-        assert actual_report.error_message=="Group has no events (worship services)"
-
     def testReport_groupExistsWithNoPeople_expectErrorMsg(self):
         groupResponse = GroupsGetResponseBuilder().add_group(3, "St. Mark's Attendance").build()
-        eventsResponse = GroupEventsGetResponseBuilder().add_event(10, datetime(2026, 6, 7, 9, 0)).build()
         peopleResponse = GroupPeopleGetResponseBuilder().build()
+        eventsResponse = GroupEventsGetResponseBuilder().add_event(10, datetime(2026, 8, 2, 9, 30)).build()
         client = FakePlanningCenterClient(groupResponse, peopleResponse, eventsResponse)
         accumulator = AttendanceDeclineAccumulator(client)
 
@@ -74,3 +62,16 @@ class TestReport:
 
         #Assert
         assert actual_report.error_message=="Group has no people"
+
+    def testReport_groupExistsWithNoEvents_expectErrorMsg(self):
+        groupResponse = GroupsGetResponseBuilder().add_group(1, "St. James Attendance").build()
+        peopleResponse = GroupPeopleGetResponseBuilder().add_person(100, "Jane", "Doe").build()
+        eventsResponse = GroupEventsGetResponseBuilder().build()
+        client = FakePlanningCenterClient(groupResponse, peopleResponse, eventsResponse)
+        accumulator = AttendanceDeclineAccumulator(client)
+
+        #Act
+        actual_report = accumulator.get_members_with_declining_attendance("St. James Attendance")
+
+        #Assert
+        assert actual_report.error_message=="Group has no events (worship services)"
