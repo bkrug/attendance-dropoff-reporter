@@ -33,5 +33,5 @@ class MemberAttendance:
 
 @dataclass
 class DeclineReport:
-    error_message: str
+    error_message: str | None
     members: List[MemberAttendance]
