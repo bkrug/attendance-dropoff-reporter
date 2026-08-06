@@ -9,7 +9,7 @@ class EmailAddress(BaseModel):
 
 class PhoneNumber(BaseModel):
     number: str
-    carrier: None
+    carrier: str | None
     location: str
     primary: bool
 
@@ -25,8 +25,7 @@ class PersonAttributes(BaseModel):
     phone_numbers: List[PhoneNumber]
 
 class DatumLinks(BaseModel):
-    Field(alias="self")
-    links_self: str
+    links_self: str = Field(alias="self")
     html: str
 
 class PersonDatum(BaseModel):
