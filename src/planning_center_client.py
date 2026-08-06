@@ -12,6 +12,13 @@ class PlanningCenterClient:
         self.api_secret = os.getenv("PLANNING_CENTER_SECRET")
         os.makedirs("test_output", exist_ok=True)
 
+    def get_group(self, group_name: str) -> None:
+        url = f"https://api.planningcenteronline.com/groups/v2/groups?where[name]={group_name}"
+        response = requests.get(url, auth=(self.api_client_id, self.api_secret))
+
+        with open("test_output/group_response.txt", "w") as f:
+            f.write(response.text)
+
     def get_people(self, group_id: int, offset: int, page_size: int) -> GroupPeopleGetResponse:
         url = f"https://api.planningcenteronline.com/groups/v2/groups/{group_id}/people?offset={offset}&per_page={page_size}"
         response = requests.get(url, auth=(self.api_client_id, self.api_secret))

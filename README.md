@@ -6,6 +6,10 @@ Query Planning Center's API to detect members' whose attendence as dropped betwe
 
 ### GET requests
 
+*Get Group Id*
+GUI for testing: https://api.planningcenteronline.com/explorer/groups/v2/groups?where[name]=Sure%20Foundation%20Attendance
+URL for program: https://api.planningcenteronline.com/groups/v2/groups?where[name]=Sure%20Foundation%20Attendance
+
 *List events within a group*
 
 GUI for testing: https://api.planningcenteronline.com/explorer/groups/v2/groups/3017831/events?order=starts_at&filter=not_canceled&where[starts_at][gte]=2025-08-08&where[ends_at][lte]=2026-08-08

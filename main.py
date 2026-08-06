@@ -4,6 +4,9 @@ group_id = 3017831
 
 httpClient = PlanningCenterClient()
 
+#TODO: Get this from config
+group_data = httpClient.get_group("Sure Foundation Attendance")
+
 people_data = httpClient.get_people(group_id, 0, 25)
 print(len(people_data.data))
 print(people_data.meta.total_count)
