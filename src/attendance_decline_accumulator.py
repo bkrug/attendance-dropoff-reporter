@@ -12,5 +12,10 @@ class AttendanceDeclineAccumulator:
         group_response = self.http_client.get_group(group_name)
         if len(group_response.data)==0:
             return DeclineReport("Group not found", [])
-        else:
-            return DeclineReport(None, [])
+
+        group_id = group_response.data[0].id
+        events_response = self.http_client.get_events(group_id, '1900-01-01', '1901-01-01', 0, 25)
+        if len(events_response.data)==0:
+            return DeclineReport("Group has no events (worship services)", [])
+
+        return DeclineReport(None, [])
