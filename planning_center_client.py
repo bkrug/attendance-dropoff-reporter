@@ -1,7 +1,7 @@
 import requests
 import os
 from dotenv import load_dotenv
-from models import GroupPeopleGetResponse
+from models import GroupPeopleGetResponse, GroupEventsGetResponse
 
 load_dotenv()
 
@@ -27,3 +27,6 @@ class PlanningCenterClient:
 
         with open("event_response.txt", "w") as f:
             f.write(response.text)
+
+        # TODO: Log serialization errors including location
+        return GroupEventsGetResponse.model_validate_json(response.text)
