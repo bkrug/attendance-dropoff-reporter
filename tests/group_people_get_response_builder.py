@@ -1,11 +1,13 @@
 from datetime import datetime, timezone
 from planning_center_models import GroupPeopleGetResponse
 from planning_center_models.people import PersonDatum, PersonAttributes
-from planning_center_models.common import DatumLinks, ResponseLinks, Meta, Parent
+from planning_center_models.common import DatumLinks, ResponseLinks
+from .meta_builder import MetaBuilder
 
 class GroupPeopleGetResponseBuilder:
     def __init__(self):
         self._people: list[PersonDatum] = []
+        self._meta_builder = MetaBuilder(parent_id=1, parent_type="Group")
 
     def add_person(self, person_id: int, first_name: str, last_name: str) -> "GroupPeopleGetResponseBuilder":
         self._people.append(
@@ -28,16 +30,14 @@ class GroupPeopleGetResponseBuilder:
         )
         return self
 
+    def add_next(self, next_offset: int, total_count: int) -> "GroupPeopleGetResponseBuilder":
+        self._meta_builder.add_next(next_offset, total_count)
+        return self
+
     def build(self) -> GroupPeopleGetResponse:
         return GroupPeopleGetResponse(
             links=ResponseLinks(links_self="https://api.planningcenteronline.com/groups/v2/groups/1/people"),
             data=list(self._people),
             included=[],
-            meta=Meta(
-                total_count=len(self._people),
-                count=len(self._people),
-                can_order_by=[],
-                can_query_by=[],
-                parent=Parent(id=1, type="Group"),
-            ),
+            meta=self._meta_builder.with_count(len(self._people)).build(),
         )

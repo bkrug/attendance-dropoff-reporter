@@ -1,11 +1,13 @@
 from datetime import datetime, timedelta
 from planning_center_models import GroupEventsGetResponse
 from planning_center_models.events import EventDatum, EventAttributes, EventImage, EventRelationships
-from planning_center_models.common import DatumLinks, ResponseLinks, Meta, Parent, Relationship
+from planning_center_models.common import DatumLinks, ResponseLinks, Relationship
+from .meta_builder import MetaBuilder
 
 class GroupEventsGetResponseBuilder:
     def __init__(self):
         self._events: list[EventDatum] = []
+        self._meta_builder = MetaBuilder(parent_id=1, parent_type="Group")
 
     def add_event(self, event_id: int, starts_at: datetime) -> "GroupEventsGetResponseBuilder":
         ends_at = starts_at + timedelta(hours=1)
@@ -42,16 +44,14 @@ class GroupEventsGetResponseBuilder:
         )
         return self
 
+    def add_next(self, next_offset: int, total_count: int) -> "GroupEventsGetResponseBuilder":
+        self._meta_builder.add_next(next_offset, total_count)
+        return self
+
     def build(self) -> GroupEventsGetResponse:
         return GroupEventsGetResponse(
             links=ResponseLinks(links_self="https://api.planningcenteronline.com/groups/v2/groups/1/events"),
             data=list(self._events),
             included=[],
-            meta=Meta(
-                total_count=len(self._events),
-                count=len(self._events),
-                can_order_by=[],
-                can_query_by=[],
-                parent=Parent(id=1, type="Group"),
-            ),
+            meta=self._meta_builder.with_count(len(self._events)).build(),
         )

@@ -1,11 +1,13 @@
 from datetime import datetime, timezone
 from planning_center_models import GroupsGetResponse
 from planning_center_models.groups import GroupDatum, GroupAttributes, GroupImage, GroupRelationships
-from planning_center_models.common import DatumLinks, ResponseLinks, Meta, Parent, Relationship
+from planning_center_models.common import DatumLinks, ResponseLinks, Relationship
+from .meta_builder import MetaBuilder
 
 class GroupsGetResponseBuilder:
     def __init__(self):
         self._groups: list[GroupDatum] = []
+        self._meta_builder = MetaBuilder(parent_id=522735, parent_type="Organization")
 
     def add_group(self, group_id: int, group_name: str) -> "GroupsGetResponseBuilder":
         self._groups.append(
@@ -42,16 +44,14 @@ class GroupsGetResponseBuilder:
         )
         return self
 
+    def add_next(self, next_offset: int, total_count: int) -> "GroupsGetResponseBuilder":
+        self._meta_builder.add_next(next_offset, total_count)
+        return self
+
     def build(self) -> GroupsGetResponse:
         return GroupsGetResponse(
             links=ResponseLinks(links_self="https://api.planningcenteronline.com/groups/v2/groups"),
             data=list(self._groups),
             included=[],
-            meta=Meta(
-                total_count=len(self._groups),
-                count=len(self._groups),
-                can_order_by=[],
-                can_query_by=[],
-                parent=Parent(id=522735, type="Organization"),
-            ),
+            meta=self._meta_builder.with_count(len(self._groups)).build(),
         )
