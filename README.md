@@ -8,8 +8,8 @@ Query Planning Center's API to detect members' whose attendence as dropped betwe
 
 *List events within a group*
 
-GUI for testing: https://api.planningcenteronline.com/explorer/groups/v2/groups/3017831/events?order=-starts_at&filter=not_canceled&where[ends_at][lte]=2026-08-08
-URL for program: https://api.planningcenteronline.com/groups/v2/groups/3017831/events?order=-starts_at&filter=not_canceled&where[ends_at][lte]=2026-08-08
+GUI for testing: https://api.planningcenteronline.com/explorer/groups/v2/groups/3017831/events?order=starts_at&filter=not_canceled&where[starts_at][gte]=2025-08-08&where[ends_at][lte]=2026-08-08
+URL for program: https://api.planningcenteronline.com/groups/v2/groups/3017831/events?order=starts_at&filter=not_canceled&where[starts_at][gte]=2025-08-08&where[ends_at][lte]=2026-08-08
 
 *List people within a group*
 
