@@ -1,4 +1,4 @@
-from planning_center_client import PlanningCenterClient
+from src.planning_center_client import PlanningCenterClient
 
 group_id = 3017831
 

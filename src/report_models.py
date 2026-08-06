@@ -1,4 +1,5 @@
 from dataclasses import dataclass
+from typing import List
 
 @dataclass
 class MemberAttendance:
@@ -29,3 +30,7 @@ class MemberAttendance:
     # For example, if someone's attendance changed from 70% to 45%, the output is -0.25
     def frequency_change(self) -> float :
         return self.late_period_frequency() - self.early_period_frequency()
+
+@dataclass
+class DeclineReport:
+    members: List[MemberAttendance]
