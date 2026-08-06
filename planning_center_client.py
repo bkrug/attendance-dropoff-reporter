@@ -32,7 +32,7 @@ class PlanningCenterClient:
         # TODO: Log serialization errors including location
         return GroupEventsGetResponse.model_validate_json(response.text)
 
-    def get_attendances(self, event_id: int, offset: int, page_size: int) -> None:
+    def get_attendances(self, event_id: int, offset: int, page_size: int) -> EventAttendancesGetResponse:
         url = f"https://api.planningcenteronline.com/groups/v2/events/{event_id}/attendances?offset={offset}&per_page={page_size}"
         response = requests.get(url, auth=(self.api_client_id, self.api_secret))
 
