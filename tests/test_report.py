@@ -3,6 +3,7 @@ import pytest
 from planning_center_client import PlanningCenterClient
 from planning_center_models import GroupsGetResponse, GroupPeopleGetResponse, GroupEventsGetResponse, EventAttendancesGetResponse
 from .groups_get_response_builder import GroupsGetResponseBuilder
+from .group_events_get_response_builder import GroupEventsGetResponseBuilder
 from attendance_decline_accumulator import AttendanceDeclineAccumulator
 
 class FakePlanningCenterClient(PlanningCenterClient):
@@ -49,11 +50,12 @@ class TestReport:
 
     def testReport_groupExistsWithNoEvents_expectErrorMsg(self):
         groupResponse = GroupsGetResponseBuilder().add_group(1, "St. James Attendance").build()
-        client = FakePlanningCenterClient(groupResponse)
+        eventsResponse = GroupEventsGetResponseBuilder().build()
+        client = FakePlanningCenterClient(groupResponse, None, eventsResponse)
         accumulator = AttendanceDeclineAccumulator(client)
 
         #Act
         actual_report = accumulator.get_members_with_declining_attendance("St. James Attendance")
 
         #Assert
-        assert actual_report.error_message==None
+        assert actual_report.error_message=="Group has no events (worship services)"
