@@ -8,7 +8,7 @@ people_data = httpClient.get_people(group_id, 0, 25)
 print(len(people_data.data))
 print(people_data.meta.total_count)
 
-event_data = httpClient.get_events(group_id, '2026-06-01', '2026-08-08', 200)
+event_data = httpClient.get_events(group_id, '2026-06-01', '2026-08-08', 0, 200)
 print(len(event_data.data))
 print(event_data.meta.total_count)
 
