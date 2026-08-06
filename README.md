@@ -2,17 +2,29 @@
 
 Query Planning Center's API to detect members' whose attendence as dropped between an earlier and later 26-week period of time
 
-## GET requests
+## Planning Center
+
+### GET requests
 
 *List events within a group*
 
-GUI for testing: https://api.planningcenteronline.com/explorer/groups/v2/groups/3017831/events?filter=not_canceled
-URL for program: https://api.planningcenteronline.com/groups/v2/groups/3017831/events?filter=not_canceled
+GUI for testing: https://api.planningcenteronline.com/explorer/groups/v2/groups/3017831/events?order=-starts_at&filter=not_canceled&where[ends_at][lte]=2026-08-08
+URL for program: https://api.planningcenteronline.com/groups/v2/groups/3017831/events?order=-starts_at&filter=not_canceled&where[ends_at][lte]=2026-08-08
 
 *List people within a group*
 
 GUI for testing: https://api.planningcenteronline.com/explorer/groups/v2/groups/3017831/people
 URL for program: https://api.planningcenteronline.com/groups/v2/groups/3017831/people
+
+### Authentication
+
+https://api.planningcenteronline.com/docs/overview/authentication
+https://api.planningcenteronline.com/oauth/applications
+https://api.planningcenteronline.com/personal_access_tokens
+
+### Filtering By Dates
+
+https://api.planningcenteronline.com/docs/overview/dates-times
 
 ## Learning Python
 
