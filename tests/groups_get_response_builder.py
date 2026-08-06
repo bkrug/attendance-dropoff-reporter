@@ -1,0 +1,57 @@
+from datetime import datetime, timezone
+from src.planning_center_models import GroupsGetResponse
+from src.planning_center_models.groups import GroupDatum, GroupAttributes, GroupImage, GroupRelationships
+from src.planning_center_models.common import DatumLinks, ResponseLinks, Meta, Parent, Relationship
+
+class GroupsGetResponseBuilder:
+    def __init__(self):
+        self._groups: list[GroupDatum] = []
+
+    def add_group(self, group_id: int, group_name: str) -> "GroupsGetResponseBuilder":
+        self._groups.append(
+            GroupDatum(
+                type="Group",
+                id=group_id,
+                attributes=GroupAttributes(
+                    archived_at=None,
+                    chat_enabled=False,
+                    contact_email=None,
+                    created_at=datetime.now(timezone.utc),
+                    description=None,
+                    description_as_plain_text=None,
+                    direct_messages_enabled=False,
+                    events_listed=False,
+                    events_visibility="members",
+                    header_image=GroupImage(thumbnail=None, medium=None, original=None),
+                    leaders_can_search_people_database=False,
+                    listed=False,
+                    location_type_preference="physical",
+                    members_are_confidential=False,
+                    memberships_count=0,
+                    name=group_name,
+                    public_church_center_web_url=None,
+                    schedule=None,
+                    virtual_location_url=None,
+                ),
+                relationships=GroupRelationships(
+                    group_type=Relationship(data=None),
+                    location=Relationship(data=None),
+                ),
+                links=DatumLinks(),
+            )
+        )
+        return self
+
+    def build(self) -> GroupsGetResponse:
+        return GroupsGetResponse(
+            links=ResponseLinks(links_self="https://api.planningcenteronline.com/groups/v2/groups"),
+            data=list(self._groups),
+            included=[],
+            meta=Meta(
+                total_count=len(self._groups),
+                count=len(self._groups),
+                can_order_by=[],
+                can_query_by=[],
+                parent=Parent(id=522735, type="Organization"),
+            ),
+        )
