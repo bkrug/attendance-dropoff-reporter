@@ -1,7 +1,7 @@
 import requests
 import os
 from dotenv import load_dotenv
-from models import GroupPeopleGetResponse, GroupEventsGetResponse
+from models import GroupPeopleGetResponse, GroupEventsGetResponse, EventAttendancesGetResponse
 
 load_dotenv()
 
@@ -38,3 +38,5 @@ class PlanningCenterClient:
 
         with open("test_output/attendance_response.txt", "w") as f:
             f.write(response.text)
+
+        return EventAttendancesGetResponse.model_validate_json(response.text)

@@ -11,3 +11,8 @@ print(people_data.meta.total_count)
 event_data = httpClient.get_events(group_id, '2026-06-01', '2026-08-08', 200)
 print(len(event_data.data))
 print(event_data.meta.total_count)
+
+event_id = event_data.data[6].id
+attendance_data = httpClient.get_attendances(event_id, 0, 25)
+print(len(attendance_data.data))
+print(attendance_data.meta.total_count)

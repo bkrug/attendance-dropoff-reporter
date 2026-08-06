@@ -1,7 +1,7 @@
 from pydantic import BaseModel, ConfigDict, Field
 from typing import List, Any
 from datetime import datetime
-from .common import Parent, DatumLinks, ResponseLinks, Meta
+from .common import DatumLinks, ResponseLinks, Meta, Relationship
 
 class EventImage(BaseModel):
     thumbnail: str | None
@@ -25,9 +25,6 @@ class EventAttributes(BaseModel):
     starts_at: datetime
     virtual_location_url: str | None
     visitors_count: int | None
-
-class Relationship(BaseModel):
-    data: Parent | None
 
 class EventRelationships(BaseModel):
     attendance_submitter: Relationship

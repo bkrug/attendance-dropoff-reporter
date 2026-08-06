@@ -4,7 +4,7 @@ from typing import List
 class DatumLinks(BaseModel):
     model_config = ConfigDict(populate_by_name=True)
 
-    links_self: str = Field(alias="self")
+    links_self: str | None = Field(default=None, alias="self")
     html: str | None = None
 
 class Next(BaseModel):
@@ -13,6 +13,9 @@ class Next(BaseModel):
 class Parent(BaseModel):
     id: int
     type: str
+
+class Relationship(BaseModel):
+    data: Parent | None
 
 class ResponseLinks(BaseModel):
     model_config = ConfigDict(populate_by_name=True)
