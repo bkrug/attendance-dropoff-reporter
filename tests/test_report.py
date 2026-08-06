@@ -1,9 +1,9 @@
 # content of test_sysexit.py
 import pytest
-from src.planning_center_client import PlanningCenterClient
-from src.planning_center_models import GroupsGetResponse, GroupPeopleGetResponse, GroupEventsGetResponse, EventAttendancesGetResponse
+from planning_center_client import PlanningCenterClient
+from planning_center_models import GroupsGetResponse, GroupPeopleGetResponse, GroupEventsGetResponse, EventAttendancesGetResponse
 from .groups_get_response_builder import GroupsGetResponseBuilder
-from src.attendance_decline_accumulator import AttendanceDeclineAccumulator
+from attendance_decline_accumulator import AttendanceDeclineAccumulator
 
 class FakePlanningCenterClient(PlanningCenterClient):
     def __init__(

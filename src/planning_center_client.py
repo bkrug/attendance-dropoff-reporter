@@ -1,7 +1,7 @@
 import requests
 import os
 from dotenv import load_dotenv
-from src.planning_center_models import GroupPeopleGetResponse, GroupEventsGetResponse, EventAttendancesGetResponse, GroupsGetResponse
+from planning_center_models import GroupPeopleGetResponse, GroupEventsGetResponse, EventAttendancesGetResponse, GroupsGetResponse
 
 load_dotenv()
 

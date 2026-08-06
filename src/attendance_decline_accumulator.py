@@ -1,5 +1,5 @@
-from src.report_models import MemberAttendance, DeclineReport
-from src.planning_center_client import PlanningCenterClient
+from report_models import MemberAttendance, DeclineReport
+from planning_center_client import PlanningCenterClient
 
 class AttendanceDeclineAccumulator:
     def __init__(

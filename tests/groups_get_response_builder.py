@@ -1,7 +1,7 @@
 from datetime import datetime, timezone
-from src.planning_center_models import GroupsGetResponse
-from src.planning_center_models.groups import GroupDatum, GroupAttributes, GroupImage, GroupRelationships
-from src.planning_center_models.common import DatumLinks, ResponseLinks, Meta, Parent, Relationship
+from planning_center_models import GroupsGetResponse
+from planning_center_models.groups import GroupDatum, GroupAttributes, GroupImage, GroupRelationships
+from planning_center_models.common import DatumLinks, ResponseLinks, Meta, Parent, Relationship
 
 class GroupsGetResponseBuilder:
     def __init__(self):
