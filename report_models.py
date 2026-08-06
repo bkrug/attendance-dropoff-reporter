@@ -25,5 +25,7 @@ class MemberAttendance:
         else:
             return self.late_period_attendance / self.late_period_record_count
 
+    # Returns the number of percentage points by which a member's attendance changed.
+    # For example, if someone's attendance changed from 70% to 45%, the output is -0.25
     def frequency_change(self) -> float :
         return self.late_period_frequency() - self.early_period_frequency()
