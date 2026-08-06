@@ -1,4 +1,4 @@
-from pydantic import BaseModel, Field
+from pydantic import BaseModel, ConfigDict, Field
 from typing import List, Any
 from datetime import datetime
 
@@ -25,6 +25,8 @@ class PersonAttributes(BaseModel):
     phone_numbers: List[PhoneNumber]
 
 class DatumLinks(BaseModel):
+    model_config = ConfigDict(populate_by_name=True)
+
     links_self: str = Field(alias="self")
     html: str
 
@@ -35,7 +37,9 @@ class PersonDatum(BaseModel):
     links: DatumLinks
 
 class ResponseLinks(BaseModel):
-    links_self: str
+    model_config = ConfigDict(populate_by_name=True)
+
+    links_self: str = Field(alias="self")
     next: str
 
 class Next(BaseModel):
