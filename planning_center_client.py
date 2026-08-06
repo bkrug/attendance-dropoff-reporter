@@ -1,6 +1,6 @@
 import requests
-from dotenv import load_dotenv
 import os
+from dotenv import load_dotenv
 from models import GroupPeopleGetResponse
 
 load_dotenv()
@@ -11,8 +11,8 @@ class PlanningCenterClient:
         self.api_client_id = os.getenv("PLANNING_CENTER_CLIENT_ID")
         self.api_secret = os.getenv("PLANNING_CENTER_SECRET")
 
-    def get_people(self, group_id: int) -> GroupPeopleGetResponse:
-        url = f"https://api.planningcenteronline.com/groups/v2/groups/{group_id}/people"
+    def get_people(self, group_id: int, offset: int, page_size: int) -> GroupPeopleGetResponse:
+        url = f"https://api.planningcenteronline.com/groups/v2/groups/{group_id}/people?offset={offset}&per_page={page_size}"
         response = requests.get(url, auth=(self.api_client_id, self.api_secret))
 
         print(response.status_code)
