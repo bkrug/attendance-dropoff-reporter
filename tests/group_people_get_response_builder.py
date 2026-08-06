@@ -30,8 +30,8 @@ class GroupPeopleGetResponseBuilder:
         )
         return self
 
-    def add_next(self, next_offset: int, total_count: int) -> "GroupPeopleGetResponseBuilder":
-        self._meta_builder.add_next(next_offset, total_count)
+    def with_next(self, next_offset: int, total_count: int) -> "GroupPeopleGetResponseBuilder":
+        self._meta_builder.with_next(next_offset, total_count)
         return self
 
     def build(self) -> GroupPeopleGetResponse:

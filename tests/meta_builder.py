@@ -12,7 +12,7 @@ class MetaBuilder:
         self._count = count
         return self
 
-    def add_next(self, next_offset: int, total_count: int) -> "MetaBuilder":
+    def with_next(self, next_offset: int, total_count: int) -> "MetaBuilder":
         self._next_offset = next_offset
         self._total_count = total_count
         return self
