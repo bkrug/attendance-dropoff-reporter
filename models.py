@@ -19,7 +19,7 @@ class PersonAttributes(BaseModel):
     created_at: datetime
     email_addresses: List[EmailAddress]
     first_name: str
-    gender: str
+    gender: str | None
     last_name: str
     permissions: str
     phone_numbers: List[PhoneNumber]
