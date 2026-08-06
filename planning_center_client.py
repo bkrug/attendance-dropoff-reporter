@@ -15,9 +15,15 @@ class PlanningCenterClient:
         url = f"https://api.planningcenteronline.com/groups/v2/groups/{group_id}/people?offset={offset}&per_page={page_size}"
         response = requests.get(url, auth=(self.api_client_id, self.api_secret))
 
-        print(response.status_code)
         with open("people_response.txt", "w") as f:
             f.write(response.text)
 
         # TODO: Log serialization errors including location
         return GroupPeopleGetResponse.model_validate_json(response.text)
+
+    def get_events(self, group_id: int, earliest_date: str, latest_date: str, page_size) -> GroupPeopleGetResponse:
+        url = f"https://api.planningcenteronline.com/groups/v2/groups/{group_id}/events?order=starts_at&filter=not_canceled&where[starts_at][gte]={earliest_date}&where[ends_at][lte]={latest_date}&per_page={page_size}"
+        response = requests.get(url, auth=(self.api_client_id, self.api_secret))
+
+        with open("event_response.txt", "w") as f:
+            f.write(response.text)
