@@ -10,12 +10,13 @@ class PlanningCenterClient:
         # TODO: Raise an error if either of these values is blank
         self.api_client_id = os.getenv("PLANNING_CENTER_CLIENT_ID")
         self.api_secret = os.getenv("PLANNING_CENTER_SECRET")
+        os.makedirs("test_output", exist_ok=True)
 
     def get_people(self, group_id: int, offset: int, page_size: int) -> GroupPeopleGetResponse:
         url = f"https://api.planningcenteronline.com/groups/v2/groups/{group_id}/people?offset={offset}&per_page={page_size}"
         response = requests.get(url, auth=(self.api_client_id, self.api_secret))
 
-        with open("people_response.txt", "w") as f:
+        with open("test_output/people_response.txt", "w") as f:
             f.write(response.text)
 
         # TODO: Log serialization errors including location
@@ -25,7 +26,7 @@ class PlanningCenterClient:
         url = f"https://api.planningcenteronline.com/groups/v2/groups/{group_id}/events?order=starts_at&filter=not_canceled&where[starts_at][gte]={earliest_date}&where[ends_at][lte]={latest_date}&per_page={page_size}"
         response = requests.get(url, auth=(self.api_client_id, self.api_secret))
 
-        with open("event_response.txt", "w") as f:
+        with open("test_output/event_response.txt", "w") as f:
             f.write(response.text)
 
         # TODO: Log serialization errors including location

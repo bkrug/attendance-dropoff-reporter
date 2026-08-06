@@ -16,6 +16,11 @@ URL for program: https://api.planningcenteronline.com/groups/v2/groups/3017831/e
 GUI for testing: https://api.planningcenteronline.com/explorer/groups/v2/groups/3017831/people
 URL for program: https://api.planningcenteronline.com/groups/v2/groups/3017831/people
 
+*Attendance of an event within the previously mentioned group*
+
+GUI for testing: https://api.planningcenteronline.com/explorer/groups/v2/events/52089304/attendances
+URL for program: 
+
 ### Authentication
 
 https://api.planningcenteronline.com/docs/overview/authentication
