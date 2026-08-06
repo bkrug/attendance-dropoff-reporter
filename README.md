@@ -19,7 +19,7 @@ URL for program: https://api.planningcenteronline.com/groups/v2/groups/3017831/p
 *Attendance of an event within the previously mentioned group*
 
 GUI for testing: https://api.planningcenteronline.com/explorer/groups/v2/events/52089304/attendances
-URL for program: 
+URL for program: https://api.planningcenteronline.com/groups/v2/events/52089304/attendances
 
 ### Authentication
 
