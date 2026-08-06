@@ -1,7 +1,7 @@
 from pydantic import BaseModel, ConfigDict, Field
 from typing import List, Any
 from datetime import datetime
-from common import DatumLinks, ResponseLinks, Meta
+from .common import DatumLinks, ResponseLinks, Meta
 
 class EmailAddress(BaseModel):
     address: str

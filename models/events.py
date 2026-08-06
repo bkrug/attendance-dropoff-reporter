@@ -1,7 +1,7 @@
 from pydantic import BaseModel, ConfigDict, Field
 from typing import List, Any
 from datetime import datetime
-from common import Parent, DatumLinks, ResponseLinks, Meta
+from .common import Parent, DatumLinks, ResponseLinks, Meta
 
 class EventImage(BaseModel):
     thumbnail: str | None
