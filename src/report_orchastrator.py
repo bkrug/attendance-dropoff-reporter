@@ -3,8 +3,11 @@ import os
 from dataclasses import asdict
 from datetime import datetime, timedelta
 from zoneinfo import ZoneInfo
+from openpyxl import Workbook
+from openpyxl.styles import Font
 from planning_center_client import PlanningCenterClient
 from attendance_decline_accumulator import AttendanceDeclineAccumulator
+from report_models import MemberAttendance
 
 class ReportOrchastrator:
     def __init__(self):
@@ -32,7 +35,41 @@ class ReportOrchastrator:
         )
 
         if attendance_report.error_message==None:
-            with open("test_output/attendance_report.txt", "w") as f:
-                f.write(json.dumps([asdict(member) for member in attendance_report.members], indent=2))
+            self._write_attendance_report_to_excel(attendance_report.members, "test_output/attendance_report.xlsx")
         else:
             print("Could not generate report: " + attendance_report.error_message)
+
+    def _write_attendance_report_to_excel(self, members: list[MemberAttendance], path: str) -> None:
+        workbook = Workbook()
+        sheet = workbook.active
+        sheet.title = "Declining Attendance"
+
+        headers = [
+            "First Name",
+            "Last Name",
+            "Early Period Attendance",
+            "Early Period Record Count",
+            "Early Period Frequency",
+            "Late Period Attendance",
+            "Late Period Record Count",
+            "Late Period Frequency",
+            "Frequency Change",
+        ]
+        sheet.append(headers)
+        for cell in sheet[1]:
+            cell.font = Font(bold=True)
+
+        for member in members:
+            sheet.append([
+                member.first_name,
+                member.last_name,
+                member.early_period_attendance,
+                member.early_period_record_count,
+                member.early_period_frequency(),
+                member.late_period_attendance,
+                member.late_period_record_count,
+                member.late_period_frequency(),
+                member.frequency_change(),
+            ])
+
+        workbook.save(path)
