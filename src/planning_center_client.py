@@ -1,5 +1,6 @@
 import requests
 import os
+import sys
 from dotenv import load_dotenv
 from planning_center_models import GroupPeopleGetResponse, GroupEventsGetResponse, EventAttendancesGetResponse, GroupsGetResponse
 
@@ -16,8 +17,11 @@ class PlanningCenterClient:
         url = f"https://api.planningcenteronline.com/groups/v2/groups?where[name]={group_name}"
         response = requests.get(url, auth=(self.api_client_id, self.api_secret))
 
+        print(f"{response.status_code} {url}")
+
         with open("test_output/group_response.txt", "w") as f:
             f.write(response.text)
+        self._exit_on_http_error(response)
 
         # TODO: Log serialization errors including location
         return GroupsGetResponse.model_validate_json(response.text)
@@ -26,8 +30,11 @@ class PlanningCenterClient:
         url = f"https://api.planningcenteronline.com/groups/v2/groups/{group_id}/people?offset={offset}&per_page={page_size}"
         response = requests.get(url, auth=(self.api_client_id, self.api_secret))
 
+        print(f"{response.status_code} {url}")
+
         with open("test_output/people_response.txt", "w") as f:
             f.write(response.text)
+        self._exit_on_http_error(response)
 
         # TODO: Log serialization errors including location
         return GroupPeopleGetResponse.model_validate_json(response.text)
@@ -36,8 +43,11 @@ class PlanningCenterClient:
         url = f"https://api.planningcenteronline.com/groups/v2/groups/{group_id}/events?order=starts_at&filter=not_canceled&where[starts_at][gte]={earliest_date}&where[ends_at][lte]={latest_date}&offset={offset}&per_page={page_size}"
         response = requests.get(url, auth=(self.api_client_id, self.api_secret))
 
+        print(f"{response.status_code} {url}")
+
         with open("test_output/event_response.txt", "w") as f:
             f.write(response.text)
+        self._exit_on_http_error(response)
 
         # TODO: Log serialization errors including location
         return GroupEventsGetResponse.model_validate_json(response.text)
@@ -46,7 +56,14 @@ class PlanningCenterClient:
         url = f"https://api.planningcenteronline.com/groups/v2/events/{event_id}/attendances?offset={offset}&per_page={page_size}"
         response = requests.get(url, auth=(self.api_client_id, self.api_secret))
 
+        print(f"{response.status_code} {url}")
+
         with open("test_output/attendance_response.txt", "w") as f:
             f.write(response.text)
+        self._exit_on_http_error(response)
 
         return EventAttendancesGetResponse.model_validate_json(response.text)
+
+    def _exit_on_http_error(self, response: requests.Response) -> None:
+        if 400 <= response.status_code <= 599:
+            sys.exit(f"Planning Center API request to {response.url} failed with status {response.status_code}: {response.text}")

@@ -106,10 +106,12 @@ class AttendanceDeclineAccumulator:
             start_date: datetime,
             end_date: datetime
         ):
-        events_response = self.http_client.get_events(group_id, start_date, end_date, 0, 25)
+        earliest_date = start_date.date().isoformat()
+        latest_date = end_date.date().isoformat()
+        events_response = self.http_client.get_events(group_id, earliest_date, latest_date, 0, 25)
         events = list(events_response.data)
         while events_response.meta.next is not None:
-            events_response = self.http_client.get_events(group_id, start_date, end_date, events_response.meta.next.offset, 25)
+            events_response = self.http_client.get_events(group_id, earliest_date, latest_date, events_response.meta.next.offset, 25)
             events.extend(events_response.data)
         return events
 
