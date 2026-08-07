@@ -4,6 +4,7 @@ from datetime import datetime
 from .groups_get_response_builder import GroupsGetResponseBuilder
 from .group_events_get_response_builder import GroupEventsGetResponseBuilder
 from .group_people_get_response_builder import GroupPeopleGetResponseBuilder
+from .event_attendances_get_response_builder import EventAttendancesGetResponseBuilder
 from .fake_planning_center_client_builder import FakePlanningCenterClientBuilder
 from attendance_decline_accumulator import AttendanceDeclineAccumulator
 
@@ -66,9 +67,6 @@ class TestReport:
         ATTENDANCE_DECREASE_MEDIUM = 102
         ATTENDANCE_DECREASE_HIGH = 104
 
-        goes_to_9_30 = [ATTENDANCE_STEADY_LOW, ATTENDANCE_INCREASE, ATTENDANCE_DECREASE_SMALL, ATTENDANCE_DECREASE_HIGH]
-        goes_to_11_30 = [ATTENDANCE_STEADY_HIGH, ATTENDANCE_INCREASE, ATTENDANCE_DECREASE_MEDIUM]
-
         groupResponse = GroupsGetResponseBuilder().add_group(10, "Trinity Attendance").build()
         peopleResponse1 = (
             GroupPeopleGetResponseBuilder()
@@ -94,6 +92,7 @@ class TestReport:
         )
         eventsResponse1 = (
             GroupEventsGetResponseBuilder()
+            # First 4-week period
             .add_event(1001, datetime(2026, 7, 5, 9, 30))
             .add_event(1002, datetime(2026, 7, 5, 11, 30))
             .add_event(1011, datetime(2026, 7, 12, 9, 30))
@@ -102,22 +101,41 @@ class TestReport:
             .add_event(1022, datetime(2026, 7, 19, 11, 30))
             .add_event(1031, datetime(2026, 7, 26, 9, 30))
             .add_event(1032, datetime(2026, 7, 26, 11, 30))
-            .add_event(1041, datetime(2026, 8, 2, 9, 30))
-            .add_event(1042, datetime(2026, 8, 2, 11, 30))
+            # Second 4-week period
+            .add_event(1101, datetime(2026, 8, 2, 9, 30))
+            .add_event(1102, datetime(2026, 8, 2, 11, 30))
             .with_next(10, 16)
             .build()
         )
         eventsResponse2 = (
             GroupEventsGetResponseBuilder()
-            .add_event(1051, datetime(2026, 7, 5, 9, 30))
-            .add_event(1052, datetime(2026, 7, 5, 11, 30))
-            .add_event(1061, datetime(2026, 7, 12, 9, 30))
-            .add_event(1062, datetime(2026, 7, 12, 11, 30))
-            .add_event(1071, datetime(2026, 7, 19, 9, 30))
-            .add_event(1072, datetime(2026, 7, 19, 11, 30))
+            .add_event(1111, datetime(2026, 7, 5, 9, 30))
+            .add_event(1112, datetime(2026, 7, 5, 11, 30))
+            .add_event(1121, datetime(2026, 7, 12, 9, 30))
+            .add_event(1122, datetime(2026, 7, 12, 11, 30))
+            .add_event(1131, datetime(2026, 7, 19, 9, 30))
+            .add_event(1132, datetime(2026, 7, 19, 11, 30))
             .with_next(None, 16)
             .build()
         )
+        SERVICE_9_30_MODULUS = 0
+        SERVICE_11_30_MODULUS = 1
+
+        goes_to_9_30 = [ATTENDANCE_STEADY_LOW, ATTENDANCE_INCREASE, ATTENDANCE_DECREASE_SMALL, ATTENDANCE_DECREASE_HIGH]
+        goes_to_11_30 = [ATTENDANCE_STEADY_HIGH, ATTENDANCE_INCREASE, ATTENDANCE_DECREASE_MEDIUM]
+
+        attendanceResponseBuilders = [EventAttendancesGetResponseBuilder() for _ in range(16)]
+
+        #ATTENDANCE_NEVER
+        for attendanceResponseBuilder in attendanceResponseBuilders:
+            attendanceResponseBuilder.add_attendance(ATTENDANCE_NEVER, False)
+
+        #ATTENDANCE_STEADY_HIGH
+        for attendanceResponseBuilder in attendanceResponseBuilders:
+            attendanceResponseBuilder.add_attendance(ATTENDANCE_STEADY_HIGH, True)
+
+        #ATTENDANCE_STEADY_LOW
+        attended_services = [1011, 1122]
 
         client_builder = (
             FakePlanningCenterClientBuilder()
