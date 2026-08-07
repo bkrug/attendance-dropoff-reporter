@@ -226,9 +226,9 @@ class TestReport:
         # Act
         report = accumulator.get_members_with_declining_attendance(
             group_name,
-            datetime(2026, 7, 5),
-            datetime(2026, 8, 2),
-            datetime(2026, 8, 29),
+            datetime(2026, 7, 5),   # Sunday
+            datetime(2026, 8, 2),   # Sunday    4-weeks later
+            datetime(2026, 8, 29),  # Saturday  almost 4-weeks later
             0.25001)
 
         # Assert
@@ -256,3 +256,4 @@ class TestReport:
         assert expected_attendance[1]==report.members[1]
 
 # TODO: Test situations where there is more than one service on the same day
+# TODO: Test situations where the member attended more than once on the same day
