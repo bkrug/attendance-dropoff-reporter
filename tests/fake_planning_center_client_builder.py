@@ -24,6 +24,10 @@ class FakePlanningCenterClientBuilder:
         self._attendances_responses[event_id] = attendances_response
         return self
 
+    def with_attendances_response(self, responses_by_id: dict[int, EventAttendancesGetResponse]) -> "FakePlanningCenterClientBuilder":
+        self._attendances_responses = responses_by_id
+        return self
+
     def build(self) -> FakePlanningCenterClient:
         return FakePlanningCenterClient(
             group_response=self._group_response,

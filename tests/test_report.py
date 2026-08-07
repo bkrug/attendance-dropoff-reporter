@@ -206,7 +206,7 @@ class TestReport:
             ]
         )
 
-        client_builder = (
+        client = (
             FakePlanningCenterClientBuilder()
             .with_group_response(group_response)
             .add_people_response(people_response_1)
@@ -214,10 +214,13 @@ class TestReport:
             .add_people_response(people_response_3)
             .add_events_response(events_response_1)
             .add_events_response(events_response_2)
+            .with_attendances_response({
+                event_id: builder.build()
+                for event_id, builder
+                in attendance_builders_by_event_id.items()
+            })
+            .build()
         )
-        for event_id in attendance_builders_by_event_id.keys():
-            client_builder.add_attendances_response(event_id, attendance_builders_by_event_id[event_id].build())
-        client = client_builder.build()
         accumulator = AttendanceDeclineAccumulator(client)
 
         # Act
