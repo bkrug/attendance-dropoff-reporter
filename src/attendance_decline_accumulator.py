@@ -29,9 +29,25 @@ class AttendanceDeclineAccumulator:
         early_attendance = self.get_attendance_by_person_id(people, early_events)
         late_attendance = self.get_attendance_by_person_id(people, late_events)
 
-        
-
-        return DeclineReport(None, [])
+        attendance_comparisons = [
+            MemberAttendance(
+                person.attributes.first_name,
+                person.attributes.last_name,
+                early_attendance[person.id],
+                len(early_events),
+                late_attendance[person.id],
+                len(late_events)
+            )
+            for person
+            in people
+        ]
+        declining_attendance = [
+            member_attendance
+            for member_attendance
+            in attendance_comparisons
+            if member_attendance.frequency_change() < -0.25
+        ]
+        return DeclineReport(None, declining_attendance)
 
     def get_attendance_by_person_id(self, people, events):
         attendance_by_people_id = {person.id: 0 for person in people}
