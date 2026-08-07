@@ -86,7 +86,11 @@ class AttendanceDeclineAccumulator:
                 for attendance in self._get_list_of_attendances(event.id)
             ]
             attendance_by_person_id = self._group_attendance_by_person_id(list_of_attendances)
-            people_who_attended = [person_id for person_id, attended in attendance_by_person_id.items() if attended]
+            people_who_attended = [
+                person_id
+                for person_id, attended in attendance_by_person_id.items()
+                if attended
+            ]
             for person_id in people_who_attended:
                 attendance_by_people_id[person_id] += 1
         return attendance_by_people_id
