@@ -528,7 +528,3 @@ class TestReport:
         assert report.error_message==None
         assert len(expected_attendance)==len(report.members)
         assert expected_attendance[0]==report.members[0]
-
-# TODO: Failure case where the early period has no events
-# TODO: Failure case where the late period has no events
-# TODO: Failure case where the decline threshold is not between 0 and 1

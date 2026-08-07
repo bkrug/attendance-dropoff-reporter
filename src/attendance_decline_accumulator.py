@@ -19,6 +19,9 @@ class AttendanceDeclineAccumulator:
             end_date: datetime,
             decline_threshold: float
         ) -> DeclineReport:
+        if not 0 <= decline_threshold <= 1:
+            return DeclineReport("Decline threshold must be between 0 and 1", [])
+
         group_response = self.http_client.get_group(group_name)
         if group_response.meta.total_count==0:
             return DeclineReport("Group not found", [])
@@ -34,6 +37,10 @@ class AttendanceDeclineAccumulator:
 
         early_events = self.group_events_by_date(event for event in events if event.attributes.starts_at < middle_date)
         late_events = self.group_events_by_date(event for event in events if event.attributes.starts_at >= middle_date)
+        if len(early_events)==0:
+            return DeclineReport("Group has no events in the early period", [])
+        if len(late_events)==0:
+            return DeclineReport("Group has no events in the late period", [])
 
         early_attendance = self.get_attendance_by_person_id(people, early_events)
         late_attendance = self.get_attendance_by_person_id(people, late_events)
