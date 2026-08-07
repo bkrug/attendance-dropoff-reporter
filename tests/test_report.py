@@ -263,7 +263,179 @@ class TestReport:
         assert expected_attendance[0]==report.members[0]
         assert expected_attendance[1]==report.members[1]
 
+    def testReport_someMembersAttendedWorshippedMoreThanOncePerDay_ExpectThisToCountAsAttendingOnce(self):
+        MEMBER_DECREASE_MEDIUM = 101
+        MEMBER_CONSISTENT_A = 102
+        MEMBER_CONSISTENT_B = 103
+
+        DECREASE_MEDIUM_FIRST_NAME = "Bill"
+        DECREASE_MEDIUM_LAST_NAME = "Birmingham"
+
+        group_name = "Messiah Attendance"
+        group_response = GroupsGetResponseBuilder().add_group(15, group_name).build()
+
+        people_response = (
+            GroupPeopleGetResponseBuilder()
+            .add_person(MEMBER_DECREASE_MEDIUM, DECREASE_MEDIUM_FIRST_NAME, DECREASE_MEDIUM_LAST_NAME)
+            .add_person(MEMBER_CONSISTENT_A, "Ed", "Edison")
+            .add_person(MEMBER_CONSISTENT_B, "Frank", "Finch")
+            .build()
+        )
+
+        # earlier 4-week period
+        SUNDAY_A1 = 1001
+        SUNDAY_A2 = 1002
+        ASH_WEDNESDAY = 1005
+        SUNDAY_B1 = 1011
+        SUNDAY_B2 = 1012
+        SUNDAY_C1 = 1021
+        SUNDAY_C2 = 1022
+        SUNDAY_D1 = 1031
+        SUNDAY_D2 = 1032
+        # later 4-week period
+        SUNDAY_E1 = 1041
+        SUNDAY_E2 = 1042
+        SUNDAY_F1 = 1101
+        SUNDAY_F2 = 1102
+        SUNDAY_G1 = 1111
+        SUNDAY_G2 = 1112
+        GOOD_FRIDAY_1 = 1117
+        GOOD_FRIDAY_2 = 1118
+        SUNDAY_H1 = 1121
+        SUNDAY_H2 = 1122
+
+        events_response = (
+            GroupEventsGetResponseBuilder()
+            # earlier 4-week period
+            .add_event(SUNDAY_A1, datetime(2026, 2, 15, 9, 30))
+            .add_event(SUNDAY_A2, datetime(2026, 2, 15, 11, 30))
+            .add_event(ASH_WEDNESDAY, datetime(2026, 2, 18, 19, 0))        # Ash Wednesday
+            .add_event(SUNDAY_B1, datetime(2026, 2, 22, 9, 30))
+            .add_event(SUNDAY_B2, datetime(2026, 2, 22, 11, 30))
+            .add_event(SUNDAY_C1, datetime(2026, 3, 1, 9, 30))
+            .add_event(SUNDAY_C2, datetime(2026, 3, 1, 11, 30))
+            .add_event(SUNDAY_D1, datetime(2026, 3, 8, 9, 30))
+            .add_event(SUNDAY_D2, datetime(2026, 3, 8, 11, 30))
+            # later 4-week period
+            .add_event(SUNDAY_E1, datetime(2026, 3, 15, 9, 30))
+            .add_event(SUNDAY_E2, datetime(2026, 3, 15, 11, 30))
+            .add_event(SUNDAY_F1, datetime(2026, 3, 22, 9, 30))
+            .add_event(SUNDAY_F2, datetime(2026, 3, 22, 11, 30))
+            .add_event(SUNDAY_G1, datetime(2026, 3, 29, 9, 30))
+            .add_event(SUNDAY_G2, datetime(2026, 3, 29, 11, 30))
+            .add_event(GOOD_FRIDAY_1, datetime(2026, 4, 3, 12, 0))         # Good Friday
+            .add_event(GOOD_FRIDAY_2, datetime(2026, 4, 3, 19, 0))         # Good Friday
+            .add_event(SUNDAY_H1, datetime(2026, 4, 5, 9, 30))
+            .add_event(SUNDAY_H2, datetime(2026, 4, 5, 11, 30))
+            .build()
+        )
+
+        all_event_ids = [event.id for event in events_response.data]
+
+        attendance_builders_by_event_id = {eventId: EventAttendancesGetResponseBuilder() for eventId in all_event_ids}
+
+        # This member's attendance declined.
+        # Attendence at two services on the same day only counts as attending once
+        record_events_that_person_attended(
+            attendance_builders_by_event_id,
+            MEMBER_DECREASE_MEDIUM,
+            [
+                # earlier period
+                SUNDAY_A1,
+                ASH_WEDNESDAY,
+                SUNDAY_B2,
+                SUNDAY_C1,
+                # later period
+                SUNDAY_F1,
+                SUNDAY_F2,
+                GOOD_FRIDAY_1,
+                GOOD_FRIDAY_2
+            ]
+        )
+
+        # This member's attendance was steady.
+        # Attendence at two services on the same day only counts as attending once
+        record_events_that_person_attended(
+            attendance_builders_by_event_id,
+            MEMBER_CONSISTENT_A,
+            [
+                # earlier period
+                SUNDAY_A1,
+                SUNDAY_A2,
+                ASH_WEDNESDAY,
+                SUNDAY_C1,
+                SUNDAY_C2,
+                SUNDAY_D1,
+                SUNDAY_D2,
+                # later period
+                SUNDAY_F1,
+                SUNDAY_G2,
+                GOOD_FRIDAY_1,
+                SUNDAY_H1
+            ]
+        )
+
+        # This member's attendance was steady.
+        record_events_that_person_attended(
+            attendance_builders_by_event_id,
+            MEMBER_CONSISTENT_B,
+            [
+                # earlier period
+                SUNDAY_A1,
+                SUNDAY_B2,
+                SUNDAY_C1,
+                SUNDAY_D2,
+                # later period
+                SUNDAY_E2,
+                SUNDAY_F1,
+                GOOD_FRIDAY_1,
+                SUNDAY_H2
+            ]
+        )        
+
+        client = (
+            FakePlanningCenterClientBuilder()
+            .with_group_response(group_response)
+            .add_people_response(people_response)
+            .add_events_response(events_response)
+            .with_attendances_response({
+                event_id: builder.build()
+                for event_id, builder
+                in attendance_builders_by_event_id.items()
+            })
+            .build()
+        )
+        accumulator = AttendanceDeclineAccumulator(client)
+
+        # Act
+        decline_threshold = 0.25001
+        report = accumulator.get_members_with_declining_attendance(
+            group_name,
+            datetime(2026, 2, 15),   # Sunday
+            datetime(2026, 3, 15),   # Sunday    4-weeks later
+            datetime(2026, 4, 11),   # Saturday  almost 4-weeks later
+            decline_threshold)
+
+        # Assert
+        expected_attendance = [
+            # This member's attendance declined
+            MemberAttendance(
+                first_name=DECREASE_MEDIUM_FIRST_NAME,
+                last_name=DECREASE_MEDIUM_LAST_NAME,
+                early_period_attendance=4,
+                early_period_record_count=5,
+                late_period_attendance=2,
+                late_period_record_count=5
+            )
+        ]
+
+        print(expected_attendance[0])
+        print(report.members[0])
+
+        assert report.error_message==None
+        assert len(expected_attendance)==len(report.members)
+        assert expected_attendance[0]==report.members[0]
+
 # TODO: Failure case where the early period has no events
 # TODO: Failure case where the late period has no events
 # TODO: Failure case where the decline threshold is not between 0 and 1
-# TODO: Test situations where the member attended more than once on the same day
