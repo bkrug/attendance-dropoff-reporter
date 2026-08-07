@@ -99,6 +99,8 @@ class TestReport:
 
         group_name = "Trinity Attendance"
         group_response = GroupsGetResponseBuilder().add_group(10, group_name).build()
+
+        # The Planning Center Api works with paged results. These are smaller pages than you would see in production.
         people_response_1 = (
             GroupPeopleGetResponseBuilder()
             .add_person(MEMBER_CONSISTENT_HIGH, "Adicus", "Adams")
@@ -121,6 +123,8 @@ class TestReport:
             .with_next(None, 7)
             .build()
         )
+
+        # The Planning Center Api works with paged results. These are smaller pages than you would see in production.
         events_response_1 = (
             GroupEventsGetResponseBuilder()
             # Early 4-week period
