@@ -80,11 +80,12 @@ class AttendanceDeclineAccumulator:
     def _get_attendance_by_person_id(self, people: list[PersonDatum], events_by_date: dict[date, list[EventDatum]]):
         attendance_by_people_id = {person.id: 0 for person in people}
         for cur_date in events_by_date.keys():
-            events_on_this_date = events_by_date[cur_date]
-            #List flattening: We do not want the list of events to result in a list of lists of attendances
-            attendance_by_person_id = self._group_attendance_by_person_id(
-                [attendance for event in events_on_this_date for attendance in self._get_list_of_attendances(event.id)]
-            )
+            list_of_attendances = [
+                attendance
+                for event in events_by_date[cur_date]
+                for attendance in self._get_list_of_attendances(event.id)
+            ]
+            attendance_by_person_id = self._group_attendance_by_person_id(list_of_attendances)
             people_who_attended = [person_id for person_id, attended in attendance_by_person_id.items() if attended]
             for person_id in people_who_attended:
                 attendance_by_people_id[person_id] += 1
