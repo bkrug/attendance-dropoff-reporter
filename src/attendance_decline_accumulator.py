@@ -1,4 +1,5 @@
 from report_models import MemberAttendance, DeclineReport
+from planning_center_models import PersonDatum, EventDatum
 from planning_center_client import PlanningCenterClient
 from operator import methodcaller
 from datetime import datetime
@@ -60,7 +61,7 @@ class AttendanceDeclineAccumulator:
         )
         return DeclineReport(None, declining_attendance)
 
-    def get_attendance_by_person_id(self, people, events):
+    def get_attendance_by_person_id(self, people: list[PersonDatum], events: list[EventDatum]):
         attendance_by_people_id = {person.id: 0 for person in people}
         for event in events:
             attendances = self.get_list_of_attendances(event.id)

@@ -408,7 +408,7 @@ class TestReport:
         accumulator = AttendanceDeclineAccumulator(client)
 
         # Act
-        decline_threshold = 0.25001
+        decline_threshold = 0.25
         report = accumulator.get_members_with_declining_attendance(
             group_name,
             datetime(2026, 2, 15),   # Sunday
