@@ -1,11 +1,13 @@
 # content of test_sysexit.py
 import pytest
 from datetime import datetime
-from .groups_get_response_builder import GroupsGetResponseBuilder
-from .group_events_get_response_builder import GroupEventsGetResponseBuilder
-from .group_people_get_response_builder import GroupPeopleGetResponseBuilder
-from .event_attendances_get_response_builder import EventAttendancesGetResponseBuilder
-from .fake_planning_center_client_builder import FakePlanningCenterClientBuilder
+from .builders import (
+    GroupsGetResponseBuilder,
+    GroupEventsGetResponseBuilder,
+    GroupPeopleGetResponseBuilder,
+    EventAttendancesGetResponseBuilder,
+    FakePlanningCenterClientBuilder,
+)
 from attendance_decline_accumulator import AttendanceDeclineAccumulator
 from report_models import MemberAttendance
 
@@ -521,9 +523,6 @@ class TestReport:
                 late_period_record_count=5
             )
         ]
-
-        print(expected_attendance[0])
-        print(report.members[0])
 
         assert report.error_message==None
         assert len(expected_attendance)==len(report.members)

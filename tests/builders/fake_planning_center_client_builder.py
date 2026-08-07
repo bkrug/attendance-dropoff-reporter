@@ -1,5 +1,5 @@
 from planning_center_models import GroupsGetResponse, GroupPeopleGetResponse, GroupEventsGetResponse, EventAttendancesGetResponse
-from .fake_planning_center_client import FakePlanningCenterClient
+from ..fake_planning_center_client import FakePlanningCenterClient
 
 class FakePlanningCenterClientBuilder:
     def __init__(self):
