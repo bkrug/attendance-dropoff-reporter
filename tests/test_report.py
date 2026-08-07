@@ -124,18 +124,25 @@ class TestReport:
         goes_to_9_30 = [ATTENDANCE_STEADY_LOW, ATTENDANCE_INCREASE, ATTENDANCE_DECREASE_SMALL, ATTENDANCE_DECREASE_HIGH]
         goes_to_11_30 = [ATTENDANCE_STEADY_HIGH, ATTENDANCE_INCREASE, ATTENDANCE_DECREASE_MEDIUM]
 
-        attendanceResponseBuilders = [EventAttendancesGetResponseBuilder() for _ in range(16)]
+        allEventIds = (
+            [event.id for event in eventsResponse1.data] +
+            [event.id for event in eventsResponse2.data]
+        )
+
+        attendanceBuildersByEventId = {eventId: EventAttendancesGetResponseBuilder() for eventId in allEventIds}
 
         #ATTENDANCE_NEVER
-        for attendanceResponseBuilder in attendanceResponseBuilders:
+        for attendanceResponseBuilder in attendanceBuildersByEventId.values():
             attendanceResponseBuilder.add_attendance(ATTENDANCE_NEVER, False)
 
         #ATTENDANCE_STEADY_HIGH
-        for attendanceResponseBuilder in attendanceResponseBuilders:
+        for attendanceResponseBuilder in attendanceBuildersByEventId.values():
             attendanceResponseBuilder.add_attendance(ATTENDANCE_STEADY_HIGH, True)
 
         #ATTENDANCE_STEADY_LOW
         attended_services = [1011, 1122]
+        for eventId in attendanceBuildersByEventId.keys():
+            attendanceBuildersByEventId[eventId].add_attendance(ATTENDANCE_STEADY_LOW, eventId in attended_services)
 
         client_builder = (
             FakePlanningCenterClientBuilder()
