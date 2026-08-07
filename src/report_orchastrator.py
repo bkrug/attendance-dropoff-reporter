@@ -5,6 +5,7 @@ from datetime import datetime, timedelta
 from zoneinfo import ZoneInfo
 from openpyxl import Workbook
 from openpyxl.styles import Font, Alignment
+from openpyxl.utils import get_column_letter
 from planning_center_client import PlanningCenterClient
 from attendance_decline_accumulator import AttendanceDeclineAccumulator
 from report_models import MemberAttendance
@@ -55,6 +56,10 @@ class ReportOrchastrator:
             "Frequency Change",
         ]
 
+        PERCENTAGE_FORMAT = "0%"
+        PERCENTAGE_COLUMN_HEADERS = ["Early Period Frequency", "Late Period Frequency", "Frequency Change"]
+        percentage_columns = [get_column_letter(headers.index(header) + 1) for header in PERCENTAGE_COLUMN_HEADERS]
+
         sheet.append(headers)
         sheet.row_dimensions[HEADER_ROW].height = 30
         for column_index, cell in enumerate(sheet[HEADER_ROW], start=1):
@@ -63,6 +68,7 @@ class ReportOrchastrator:
             sheet.column_dimensions[cell.column_letter].width = 16
 
         for member in members:
+            row_index = sheet.max_row + 1
             sheet.append([
                 member.first_name,
                 member.last_name,
@@ -74,5 +80,7 @@ class ReportOrchastrator:
                 member.late_period_frequency(),
                 member.frequency_change(),
             ])
+            for column_letter in percentage_columns:
+                sheet[f"{column_letter}{row_index}"].number_format = PERCENTAGE_FORMAT
 
         workbook.save(path)
