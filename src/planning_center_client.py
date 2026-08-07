@@ -22,53 +22,44 @@ class PlanningCenterClient:
 
     def get_group(self, group_name: str) -> GroupsGetResponse:
         url = f"https://api.planningcenteronline.com/groups/v2/groups?where[name]={group_name}"
-        response = self._get(url)
-
-        with open("test_output/group_response.txt", "w") as f:
-            f.write(response.text)
-        self._exit_on_http_error(response)
+        response = self._get(url, "test_output/group_response.txt")
 
         # TODO: Log serialization errors including location
         return GroupsGetResponse.model_validate_json(response.text)
 
     def get_people(self, group_id: int, offset: int, page_size: int) -> GroupPeopleGetResponse:
         url = f"https://api.planningcenteronline.com/groups/v2/groups/{group_id}/people?offset={offset}&per_page={page_size}"
-        response = self._get(url)
-
-        with open("test_output/people_response.txt", "w") as f:
-            f.write(response.text)
-        self._exit_on_http_error(response)
+        response = self._get(url, "test_output/people_response.txt")
 
         # TODO: Log serialization errors including location
         return GroupPeopleGetResponse.model_validate_json(response.text)
 
     def get_events(self, group_id: int, earliest_date: str, latest_date: str, offset: int, page_size: int) -> GroupEventsGetResponse:
         url = f"https://api.planningcenteronline.com/groups/v2/groups/{group_id}/events?order=starts_at&filter=not_canceled&where[starts_at][gte]={earliest_date}&where[ends_at][lte]={latest_date}&offset={offset}&per_page={page_size}"
-        response = self._get(url)
-
-        with open("test_output/event_response.txt", "w") as f:
-            f.write(response.text)
-        self._exit_on_http_error(response)
+        response = self._get(url, "test_output/event_response.txt")
 
         # TODO: Log serialization errors including location
         return GroupEventsGetResponse.model_validate_json(response.text)
 
     def get_attendances(self, event_id: int, offset: int, page_size: int) -> EventAttendancesGetResponse:
         url = f"https://api.planningcenteronline.com/groups/v2/events/{event_id}/attendances?offset={offset}&per_page={page_size}"
-        response = self._get(url)
-
-        with open("test_output/attendance_response.txt", "w") as f:
-            f.write(response.text)
-        self._exit_on_http_error(response)
+        response = self._get(url, "test_output/attendance_response.txt")
 
         return EventAttendancesGetResponse.model_validate_json(response.text)
 
-    def _get(self, url: str) -> requests.Response:
+    def _get(self, url: str, debug_output_path: str) -> requests.Response:
         self._wait_for_rate_limit()
         response = requests.get(url, auth=(self.api_client_id, self.api_secret))
         self._request_timestamps.append(time.monotonic())
 
         print(f"{response.status_code} {url}")
+
+        #TODO: Make this configurable
+        with open(debug_output_path, "w") as f:
+            f.write(response.text)
+
+        #TODO: Begin returning a Result<success, error> type.
+        self._exit_on_http_error(response)
 
         return response
 
