@@ -20,8 +20,8 @@ def record_events_that_person_attended(
 
 class TestReport:
     def testReport_groupDoesNotExist_expectErrorMsg(self):
-        emptyGroupResponse = GroupsGetResponseBuilder().build()
-        client = FakePlanningCenterClientBuilder().with_group_response(emptyGroupResponse).build()
+        empty_group_response = GroupsGetResponseBuilder().build()
+        client = FakePlanningCenterClientBuilder().with_group_response(empty_group_response).build()
         accumulator = AttendanceDeclineAccumulator(client)
 
         #Act
@@ -36,14 +36,14 @@ class TestReport:
         assert actual_report.error_message=="Group not found"
 
     def testReport_groupExistsWithNoPeople_expectErrorMsg(self):
-        groupResponse = GroupsGetResponseBuilder().add_group(3, "St. Mark's Attendance").build()
-        peopleResponse = GroupPeopleGetResponseBuilder().build()
-        eventsResponse = GroupEventsGetResponseBuilder().add_event(10, datetime(2026, 8, 2, 9, 30)).build()
+        group_response = GroupsGetResponseBuilder().add_group(3, "St. Mark's Attendance").build()
+        people_response = GroupPeopleGetResponseBuilder().build()
+        events_response = GroupEventsGetResponseBuilder().add_event(10, datetime(2026, 8, 2, 9, 30)).build()
         client = (
             FakePlanningCenterClientBuilder()
-            .with_group_response(groupResponse)
-            .add_people_response(peopleResponse)
-            .add_events_response(eventsResponse)
+            .with_group_response(group_response)
+            .add_people_response(people_response)
+            .add_events_response(events_response)
             .build()
         )
         accumulator = AttendanceDeclineAccumulator(client)
@@ -60,14 +60,14 @@ class TestReport:
         assert actual_report.error_message=="Group has no people"
 
     def testReport_groupExistsWithNoEvents_expectErrorMsg(self):
-        groupResponse = GroupsGetResponseBuilder().add_group(20, "St. James Attendance").build()
-        peopleResponse = GroupPeopleGetResponseBuilder().add_person(100, "Jane", "Doe").build()
-        eventsResponse = GroupEventsGetResponseBuilder().build()
+        group_response = GroupsGetResponseBuilder().add_group(20, "St. James Attendance").build()
+        people_response = GroupPeopleGetResponseBuilder().add_person(100, "Jane", "Doe").build()
+        events_response = GroupEventsGetResponseBuilder().build()
         client = (
             FakePlanningCenterClientBuilder()
-            .with_group_response(groupResponse)
-            .add_people_response(peopleResponse)
-            .add_events_response(eventsResponse)
+            .with_group_response(group_response)
+            .add_people_response(people_response)
+            .add_events_response(events_response)
             .build()
         )
         accumulator = AttendanceDeclineAccumulator(client)
@@ -263,5 +263,7 @@ class TestReport:
         assert expected_attendance[0]==report.members[0]
         assert expected_attendance[1]==report.members[1]
 
-# TODO: Test situations where there is more than one service on the same day
+# TODO: Failure case where the early period has no events
+# TODO: Failure case where the late period has no events
+# TODO: Failure case where the decline threshold is not between 0 and 1
 # TODO: Test situations where the member attended more than once on the same day
