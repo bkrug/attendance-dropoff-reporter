@@ -44,7 +44,7 @@ class GroupEventsGetResponseBuilder:
         )
         return self
 
-    def with_next(self, next_offset: int, total_count: int) -> "GroupEventsGetResponseBuilder":
+    def with_next(self, next_offset: int | None, total_count: int) -> "GroupEventsGetResponseBuilder":
         self._meta_builder.with_next(next_offset, total_count)
         return self
 

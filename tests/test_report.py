@@ -39,7 +39,7 @@ class TestReport:
         assert actual_report.error_message=="Group has no people"
 
     def testReport_groupExistsWithNoEvents_expectErrorMsg(self):
-        groupResponse = GroupsGetResponseBuilder().add_group(1, "St. James Attendance").build()
+        groupResponse = GroupsGetResponseBuilder().add_group(20, "St. James Attendance").build()
         peopleResponse = GroupPeopleGetResponseBuilder().add_person(100, "Jane", "Doe").build()
         eventsResponse = GroupEventsGetResponseBuilder().build()
         client = (
@@ -56,3 +56,75 @@ class TestReport:
 
         #Assert
         assert actual_report.error_message=="Group has no events (worship services)"
+
+    def testReport_groupExistsWithData_expectSomeResults(self):
+        ATTENDANCE_STEADY_HIGH = 101
+        ATTENDANCE_STEADY_LOW = 105
+        ATTENDANCE_NEVER = 103
+        ATTENDANCE_INCREASE = 107
+        ATTENDANCE_DECREASE_SMALL = 106
+        ATTENDANCE_DECREASE_MEDIUM = 102
+        ATTENDANCE_DECREASE_HIGH = 104
+
+        goes_to_9_30 = [ATTENDANCE_STEADY_LOW, ATTENDANCE_INCREASE, ATTENDANCE_DECREASE_SMALL, ATTENDANCE_DECREASE_HIGH]
+        goes_to_11_30 = [ATTENDANCE_STEADY_HIGH, ATTENDANCE_INCREASE, ATTENDANCE_DECREASE_MEDIUM]
+
+        groupResponse = GroupsGetResponseBuilder().add_group(10, "Trinity Attendance").build()
+        peopleResponse1 = (
+            GroupPeopleGetResponseBuilder()
+            .add_person(ATTENDANCE_STEADY_HIGH, "Adicus", "Adams")
+            .add_person(ATTENDANCE_DECREASE_MEDIUM, "Bill", "Birmingham")
+            .add_person(ATTENDANCE_NEVER, "Cathy", "Clinton")
+            .with_next(3, 7)
+            .build()
+        )
+        peopleResponse2 = (
+            GroupPeopleGetResponseBuilder()
+            .add_person(ATTENDANCE_DECREASE_HIGH, "Dwanye", "Doe")
+            .add_person(ATTENDANCE_STEADY_LOW, "Ed", "Edison")
+            .add_person(ATTENDANCE_DECREASE_SMALL, "Frank", "Finch")
+            .with_next(6, 7)
+            .build()
+        )
+        peopleResponse3 = (
+            GroupPeopleGetResponseBuilder()
+            .add_person(ATTENDANCE_INCREASE, "Gerald", "Gibson")
+            .with_next(None, 7)
+            .build()
+        )
+        eventsResponse1 = (
+            GroupEventsGetResponseBuilder()
+            .add_event(1001, datetime(2026, 7, 5, 9, 30))
+            .add_event(1002, datetime(2026, 7, 5, 11, 30))
+            .add_event(1011, datetime(2026, 7, 12, 9, 30))
+            .add_event(1012, datetime(2026, 7, 12, 11, 30))
+            .add_event(1021, datetime(2026, 7, 19, 9, 30))
+            .add_event(1022, datetime(2026, 7, 19, 11, 30))
+            .add_event(1031, datetime(2026, 7, 26, 9, 30))
+            .add_event(1032, datetime(2026, 7, 26, 11, 30))
+            .add_event(1041, datetime(2026, 8, 2, 9, 30))
+            .add_event(1042, datetime(2026, 8, 2, 11, 30))
+            .with_next(10, 16)
+            .build()
+        )
+        eventsResponse2 = (
+            GroupEventsGetResponseBuilder()
+            .add_event(1051, datetime(2026, 7, 5, 9, 30))
+            .add_event(1052, datetime(2026, 7, 5, 11, 30))
+            .add_event(1061, datetime(2026, 7, 12, 9, 30))
+            .add_event(1062, datetime(2026, 7, 12, 11, 30))
+            .add_event(1071, datetime(2026, 7, 19, 9, 30))
+            .add_event(1072, datetime(2026, 7, 19, 11, 30))
+            .with_next(None, 16)
+            .build()
+        )
+
+        client_builder = (
+            FakePlanningCenterClientBuilder()
+            .with_group_response(groupResponse)
+            .add_people_response(peopleResponse1)
+            .add_people_response(peopleResponse2)
+            .add_people_response(peopleResponse3)
+            .add_events_response(eventsResponse1)
+            .add_events_response(eventsResponse2)
+        )        
