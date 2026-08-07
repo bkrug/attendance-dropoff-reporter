@@ -27,12 +27,12 @@ class AttendanceDeclineAccumulator:
         if len(people)==0:
             return DeclineReport("Group has no people", [])
 
-        events = self.get_list_of_events(group_id)
+        events = self.get_list_of_events(group_id, start_date, end_date)
         if len(events)==0:
             return DeclineReport("Group has no events (worship services)", [])
 
-        early_events = [event for event in events if event.attributes.starts_at < datetime(2026, 8, 2)]
-        late_events = [event for event in events if event.attributes.starts_at >= datetime(2026, 8, 2)]
+        early_events = [event for event in events if event.attributes.starts_at < middle_date]
+        late_events = [event for event in events if event.attributes.starts_at >= middle_date]
 
         early_attendance = self.get_attendance_by_person_id(people, early_events)
         late_attendance = self.get_attendance_by_person_id(people, late_events)
@@ -70,12 +70,16 @@ class AttendanceDeclineAccumulator:
         return attendance_by_people_id
 
     #TODO: Prevent either of this methods from entering an infinite loop
-    #TODO: Calculate start and end date better
-    def get_list_of_events(self, group_id):
-        events_response = self.http_client.get_events(group_id, '1900-01-01', '1901-01-01', 0, 25)
+    def get_list_of_events(
+            self,
+            group_id: int,
+            start_date: datetime,
+            end_date: datetime
+        ):
+        events_response = self.http_client.get_events(group_id, start_date, end_date, 0, 25)
         events = list(events_response.data)
         while events_response.meta.next is not None:
-            events_response = self.http_client.get_events(group_id, '1900-01-01', '1901-01-01', events_response.meta.next.offset, 25)
+            events_response = self.http_client.get_events(group_id, start_date, end_date, events_response.meta.next.offset, 25)
             events.extend(events_response.data)
         return events
 
