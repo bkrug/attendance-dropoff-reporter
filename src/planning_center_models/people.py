@@ -3,6 +3,8 @@ from typing import List, Any
 from datetime import datetime
 from .common import DatumLinks, ResponseLinks, Meta
 
+__all__ = ["EmailAddress", "PhoneNumber", "PersonAttributes", "PersonDatum", "GroupPeopleGetResponse"]
+
 class EmailAddress(BaseModel):
     address: str
     location: str

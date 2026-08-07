@@ -2,6 +2,8 @@ from pydantic import BaseModel
 from typing import List, Any
 from .common import DatumLinks, ResponseLinks, Meta, Relationship
 
+__all__ = ["AttendanceAttributes", "AttendanceRelationships", "AttendanceDatum", "EventAttendancesGetResponse"]
+
 class AttendanceAttributes(BaseModel):
     attended: bool
     role: str
