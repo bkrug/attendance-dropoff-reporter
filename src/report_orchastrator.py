@@ -4,7 +4,7 @@ from dataclasses import asdict
 from datetime import datetime, timedelta
 from zoneinfo import ZoneInfo
 from openpyxl import Workbook
-from openpyxl.styles import Font
+from openpyxl.styles import Font, Alignment
 from planning_center_client import PlanningCenterClient
 from attendance_decline_accumulator import AttendanceDeclineAccumulator
 from report_models import MemberAttendance
@@ -28,8 +28,6 @@ class ReportOrchastrator:
         middle_date = end_date - timedelta(days=comparison_size_weeks * 7 - 1)
         start_date = middle_date - timedelta(days=comparison_size_weeks * 7)
 
-        print(start_date, middle_date, end_date)
-
         attendance_report = self._accumulator.get_members_with_declining_attendance(
             group_name, start_date, middle_date, end_date, decline_threshold
         )
@@ -43,6 +41,7 @@ class ReportOrchastrator:
         workbook = Workbook()
         sheet = workbook.active
         sheet.title = "Declining Attendance"
+        HEADER_ROW = 1
 
         headers = [
             "First Name",
@@ -55,9 +54,13 @@ class ReportOrchastrator:
             "Late Period Frequency",
             "Frequency Change",
         ]
+
         sheet.append(headers)
-        for cell in sheet[1]:
+        sheet.row_dimensions[HEADER_ROW].height = 30
+        for column_index, cell in enumerate(sheet[HEADER_ROW], start=1):
             cell.font = Font(bold=True)
+            cell.alignment = Alignment(wrap_text=True)
+            sheet.column_dimensions[cell.column_letter].width = 16
 
         for member in members:
             sheet.append([
