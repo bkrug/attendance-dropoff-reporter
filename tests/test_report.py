@@ -1,5 +1,3 @@
-# content of test_sysexit.py
-import pytest
 from datetime import datetime
 from .builders import (
     GroupsGetResponseBuilder,
