@@ -1,26 +1,25 @@
 import os
 import sys
+from datetime import date, datetime
 
 sys.path.insert(0, os.path.join(os.path.dirname(os.path.abspath(__file__)), "src"))
 
 from planning_center_client import PlanningCenterClient
-
-group_id = 3017831
+from attendance_decline_accumulator import AttendanceDeclineAccumulator
 
 httpClient = PlanningCenterClient()
+accumulator = AttendanceDeclineAccumulator(httpClient)
 
-#TODO: Get this from config
-group_data = httpClient.get_group("Sure Foundation Attendance")
+attendance_report = accumulator.get_members_with_declining_attendance(
+    "Sure Foundation Attendance",
+    datetime(2026, 6, 1),
+    datetime(2026, 7, 1),
+    datetime(2026, 8, 31),
+    .25
+)
 
-people_data = httpClient.get_people(group_id, 0, 25)
-print(len(people_data.data))
-print(people_data.meta.total_count)
-
-event_data = httpClient.get_events(group_id, '2026-06-01', '2026-08-08', 0, 200)
-print(len(event_data.data))
-print(event_data.meta.total_count)
-
-event_id = event_data.data[6].id
-attendance_data = httpClient.get_attendances(event_id, 0, 25)
-print(len(attendance_data.data))
-print(attendance_data.meta.total_count)
+if attendance_report.error_message==None:
+    with open("test_output/attendance_report.txt", "w") as f:
+        f.write(attendance_report.members)
+else:
+    print("Could not generate report: " + attendance_report.error_message)

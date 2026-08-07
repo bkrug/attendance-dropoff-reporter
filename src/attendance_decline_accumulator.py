@@ -27,23 +27,23 @@ class AttendanceDeclineAccumulator:
             return DeclineReport("Group not found", [])
         group_id = group_response.data[0].id
 
-        people = self.get_list_of_people(group_id)
+        people = self._get_list_of_people(group_id)
         if len(people)==0:
             return DeclineReport("Group has no people", [])
 
-        events = self.get_list_of_events(group_id, start_date, end_date)
+        events = self._get_list_of_events(group_id, start_date, end_date)
         if len(events)==0:
             return DeclineReport("Group has no events (worship services)", [])
 
-        early_events = self.group_events_by_date(event for event in events if event.attributes.starts_at < middle_date)
-        late_events = self.group_events_by_date(event for event in events if event.attributes.starts_at >= middle_date)
+        early_events = self._group_events_by_date(event for event in events if event.attributes.starts_at < middle_date)
+        late_events = self._group_events_by_date(event for event in events if event.attributes.starts_at >= middle_date)
         if len(early_events)==0:
             return DeclineReport("Group has no events in the early period", [])
         if len(late_events)==0:
             return DeclineReport("Group has no events in the late period", [])
 
-        early_attendance = self.get_attendance_by_person_id(people, early_events)
-        late_attendance = self.get_attendance_by_person_id(people, late_events)
+        early_attendance = self._get_attendance_by_person_id(people, early_events)
+        late_attendance = self._get_attendance_by_person_id(people, late_events)
 
         attendance_comparisons = [
             MemberAttendance(
@@ -71,26 +71,26 @@ class AttendanceDeclineAccumulator:
     # Claude code claims that we could remove this for-loop by using the itertools library.
     # "from itertools import groupby"
     # The problem is that it would only catch _consequtive_ matching keys.
-    def group_events_by_date(self, events: list[EventDatum]) -> dict[date, list[EventDatum]]:
+    def _group_events_by_date(self, events: list[EventDatum]) -> dict[date, list[EventDatum]]:
         grouped: dict[date, list[EventDatum]] = {}
         for event in events:
             grouped.setdefault(event.attributes.starts_at.date(), []).append(event)
         return grouped
 
-    def get_attendance_by_person_id(self, people: list[PersonDatum], events_by_date: dict[date, list[EventDatum]]):
+    def _get_attendance_by_person_id(self, people: list[PersonDatum], events_by_date: dict[date, list[EventDatum]]):
         attendance_by_people_id = {person.id: 0 for person in people}
         for cur_date in events_by_date.keys():
             events_on_this_date = events_by_date[cur_date]
             #List flattening: We do not want the list of events to result in a list of lists of attendances
-            attendance_by_person_id = self.group_attendance_by_person_id(
-                [attendance for event in events_on_this_date for attendance in self.get_list_of_attendances(event.id)]
+            attendance_by_person_id = self._group_attendance_by_person_id(
+                [attendance for event in events_on_this_date for attendance in self._get_list_of_attendances(event.id)]
             )
             people_who_attended = [person_id for person_id, attended in attendance_by_person_id.items() if attended]
             for person_id in people_who_attended:
                 attendance_by_people_id[person_id] += 1
         return attendance_by_people_id
 
-    def group_attendance_by_person_id(self, attendances: list[AttendanceDatum]) -> dict[int, bool]:
+    def _group_attendance_by_person_id(self, attendances: list[AttendanceDatum]) -> dict[int, bool]:
         grouped: dict[int, bool] = {}
         for attendance in attendances:
             person_id = attendance.relationships.person.data.id
@@ -100,7 +100,7 @@ class AttendanceDeclineAccumulator:
 
     #TODO: Prevent either of this methods from entering an infinite loop
     #TODO: Page Size should somehow be configurable
-    def get_list_of_events(
+    def _get_list_of_events(
             self,
             group_id: int,
             start_date: datetime,
@@ -115,7 +115,7 @@ class AttendanceDeclineAccumulator:
 
     #TODO: Prevent either of this methods from entering an infinite loop
     #TODO: Page Size should somehow be configurable
-    def get_list_of_people(self, group_id):
+    def _get_list_of_people(self, group_id):
         people_response = self.http_client.get_people(group_id, 0, 25)
         people = list(people_response.data)
         while people_response.meta.next is not None:
@@ -125,7 +125,7 @@ class AttendanceDeclineAccumulator:
 
     #TODO: Prevent either of this methods from entering an infinite loop
     #TODO: Page Size should somehow be configurable
-    def get_list_of_attendances(self, event_id):
+    def _get_list_of_attendances(self, event_id):
         attendance_response = self.http_client.get_attendances(event_id, 0, 25)
         attendance = list(attendance_response.data)
         while attendance_response.meta.next is not None:
