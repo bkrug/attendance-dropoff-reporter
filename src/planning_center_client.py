@@ -10,14 +10,13 @@ from planning_center_models import GroupPeopleGetResponse, GroupEventsGetRespons
 load_dotenv()
 
 class PlanningCenterClient:
-    #TODO: Make this configurable
-    RATE_LIMIT_MAX_REQUESTS = 80
-    RATE_LIMIT_WINDOW_SECONDS = 20
-
     def __init__(self):
         # TODO: Raise an error if either of these values is blank
         self.api_client_id = os.getenv("PLANNING_CENTER_CLIENT_ID")
         self.api_secret = os.getenv("PLANNING_CENTER_SECRET")
+        self.rate_limit_max_requests = int(os.getenv("RATE_LIMIT_MAX_REQUESTS", "80"))
+        self.rate_limit_window_seconds = int(os.getenv("RATE_LIMIT_WINDOW_SECONDS", "20"))
+        self.log_response_text = os.getenv("LOG_RESPONSE_TEXT", "").lower()=="true" or os.getenv("LOG_RESPONSE_TEXT", "")=="1"
         os.makedirs("test_output", exist_ok=True)
         self._request_timestamps = deque()
 
@@ -57,14 +56,14 @@ class PlanningCenterClient:
             print(f"{response.status_code} {url}")
 
             if response.status_code == HTTPStatus.TOO_MANY_REQUESTS:
-                time.sleep(self.RATE_LIMIT_WINDOW_SECONDS)
+                time.sleep(self.rate_limit_window_seconds)
                 continue
 
             break
 
-        #TODO: Make this configurable
-        with open(debug_output_path, "w") as f:
-            f.write(response.text)
+        if self.log_response_text:
+            with open(debug_output_path, "w") as f:
+                f.write(response.text)
 
         #TODO: Begin returning a Result<success, error> type.
         self._exit_on_http_error(response)
@@ -73,11 +72,11 @@ class PlanningCenterClient:
 
     def _wait_for_rate_limit(self) -> None:
         now = time.monotonic()
-        while self._request_timestamps and now - self._request_timestamps[0] > self.RATE_LIMIT_WINDOW_SECONDS:
+        while self._request_timestamps and now - self._request_timestamps[0] > self.rate_limit_window_seconds:
             self._request_timestamps.popleft()
 
-        if len(self._request_timestamps) >= self.RATE_LIMIT_MAX_REQUESTS:
-            seconds_until_oldest_expires = self.RATE_LIMIT_WINDOW_SECONDS - (now - self._request_timestamps[0])
+        if len(self._request_timestamps) >= self.rate_limit_max_requests:
+            seconds_until_oldest_expires = self.rate_limit_window_seconds - (now - self._request_timestamps[0])
             if seconds_until_oldest_expires > 0:
                 time.sleep(seconds_until_oldest_expires)
             self._request_timestamps.popleft()
