@@ -3,6 +3,7 @@ import os
 import sys
 import time
 from collections import deque
+from http import HTTPStatus
 from dotenv import load_dotenv
 from planning_center_models import GroupPeopleGetResponse, GroupEventsGetResponse, EventAttendancesGetResponse, GroupsGetResponse
 
@@ -48,11 +49,18 @@ class PlanningCenterClient:
         return EventAttendancesGetResponse.model_validate_json(response.text)
 
     def _get(self, url: str, debug_output_path: str) -> requests.Response:
-        self._wait_for_rate_limit()
-        response = requests.get(url, auth=(self.api_client_id, self.api_secret))
-        self._request_timestamps.append(time.monotonic())
+        while True:
+            self._wait_for_rate_limit()
+            response = requests.get(url, auth=(self.api_client_id, self.api_secret))
+            self._request_timestamps.append(time.monotonic())
 
-        print(f"{response.status_code} {url}")
+            print(f"{response.status_code} {url}")
+
+            if response.status_code == HTTPStatus.TOO_MANY_REQUESTS:
+                time.sleep(self.RATE_LIMIT_WINDOW_SECONDS)
+                continue
+
+            break
 
         #TODO: Make this configurable
         with open(debug_output_path, "w") as f:
