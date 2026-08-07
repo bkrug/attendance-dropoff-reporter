@@ -66,7 +66,7 @@ class AttendanceDeclineAccumulator:
                 member_attendance
                 for member_attendance
                 in attendance_comparisons
-                if member_attendance.frequency_change() < -decline_threshold
+                if member_attendance.frequency_change() <= -decline_threshold
             ),
             key=methodcaller("frequency_change")
         )
