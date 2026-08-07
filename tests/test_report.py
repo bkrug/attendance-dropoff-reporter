@@ -233,6 +233,7 @@ class TestReport:
 
         # Assert
         expected_attendance = [
+            # This member's attendance declined by 75% points
             MemberAttendance(
                 first_name=DECREASE_HIGH_FIRST_NAME,
                 last_name=DECREASE_HIGH_LAST_NAME,
@@ -241,6 +242,7 @@ class TestReport:
                 late_period_attendance=1,
                 late_period_record_count=4
             ),
+            # This member's attendance declined by 50% points
             MemberAttendance(
                 first_name=DECREASE_MEDIUM_FIRST_NAME,
                 last_name=DECREASE_MEDIUM_LAST_NAME,
@@ -249,6 +251,7 @@ class TestReport:
                 late_period_attendance=2,
                 late_period_record_count=4
             )
+            # We expect the results to omit a member whose attendance declined by 25% points, as that is within the threshold
         ]
         assert report.error_message==None
         assert len(expected_attendance)==len(report.members)
