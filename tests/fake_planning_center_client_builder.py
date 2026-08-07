@@ -6,7 +6,7 @@ class FakePlanningCenterClientBuilder:
         self._group_response: GroupsGetResponse | None = None
         self._people_responses: list[GroupPeopleGetResponse] = []
         self._events_responses: list[GroupEventsGetResponse] = []
-        self._attendances_responses: list[EventAttendancesGetResponse] = []
+        self._attendances_responses: dict[int, EventAttendancesGetResponse] = []
 
     def with_group_response(self, group_response: GroupsGetResponse) -> "FakePlanningCenterClientBuilder":
         self._group_response = group_response
@@ -20,8 +20,8 @@ class FakePlanningCenterClientBuilder:
         self._events_responses.append(events_response)
         return self
 
-    def add_attendances_response(self, attendances_response: EventAttendancesGetResponse) -> "FakePlanningCenterClientBuilder":
-        self._attendances_responses.append(attendances_response)
+    def add_attendances_response(self, event_id: int, attendances_response: EventAttendancesGetResponse) -> "FakePlanningCenterClientBuilder":
+        self._attendances_responses.append(event_id, attendances_response)
         return self
 
     def build(self) -> FakePlanningCenterClient:
@@ -29,5 +29,5 @@ class FakePlanningCenterClientBuilder:
             group_response=self._group_response,
             people_responses=list(self._people_responses),
             events_responses=list(self._events_responses),
-            attendances_responses=list(self._attendances_responses),
+            attendances_responses=self._attendances_responses,
         )

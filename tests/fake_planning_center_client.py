@@ -7,12 +7,12 @@ class FakePlanningCenterClient(PlanningCenterClient):
         group_response: GroupsGetResponse | None = None,
         people_responses: list[GroupPeopleGetResponse] | None = None,
         events_responses: list[GroupEventsGetResponse] | None = None,
-        attendances_responses: list[EventAttendancesGetResponse] | None = None,
+        attendances_responses: dict[int, EventAttendancesGetResponse] | None = None,
     ):
         self._group_response = group_response
         self._people_responses = list(people_responses) if people_responses is not None else []
         self._events_responses = list(events_responses) if events_responses is not None else []
-        self._attendances_responses = list(attendances_responses) if attendances_responses is not None else []
+        self._attendances_responses = dict(attendances_responses) if attendances_responses is not None else []
 
     def get_group(self, group_name: str) -> GroupsGetResponse:
         return self._require(self._group_response, "group_response")
@@ -24,7 +24,7 @@ class FakePlanningCenterClient(PlanningCenterClient):
         return self._require_next(self._events_responses, "events_responses")
 
     def get_attendances(self, event_id: int, offset: int, page_size: int) -> EventAttendancesGetResponse:
-        return self._require_next(self._attendances_responses, "attendances_responses")
+        return self._require_key(self._attendances_responses, event_id, "attendances_responses")
 
     def _require(self, response, param_name: str):
         if response is None:
@@ -35,3 +35,8 @@ class FakePlanningCenterClient(PlanningCenterClient):
         if not responses:
             raise NotImplementedError(f"FakePlanningCenterClient has no remaining {param_name}, but a test called the method that needs one.")
         return responses.pop(0)
+
+    def _require_key(self, given_dict: dict, key: int, param_name: str):
+        if not key in given_dict.keys():
+            raise NotImplementedError(f"FakePlanningCenterClient has no {param_name} with key {key}, but a test called the method that needs one.")
+        return given_dict[key]
