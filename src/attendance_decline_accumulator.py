@@ -1,5 +1,6 @@
 from report_models import MemberAttendance, DeclineReport
 from planning_center_client import PlanningCenterClient
+from operator import methodcaller
 import datetime as dt
 
 class AttendanceDeclineAccumulator:
@@ -41,12 +42,16 @@ class AttendanceDeclineAccumulator:
             for person
             in people
         ]
-        declining_attendance = [
-            member_attendance
-            for member_attendance
-            in attendance_comparisons
-            if member_attendance.frequency_change() < -0.25
-        ]
+        declining_attendance = sorted(
+            (
+                member_attendance
+                for member_attendance
+                in attendance_comparisons
+                #TODO: This threshold should be configurable
+                if member_attendance.frequency_change() < -0.26
+            ),
+            key=methodcaller("frequency_change")
+        )
         return DeclineReport(None, declining_attendance)
 
     def get_attendance_by_person_id(self, people, events):

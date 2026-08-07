@@ -119,9 +119,9 @@ class TestReport:
         )
         events_response_2 = (
             GroupEventsGetResponseBuilder()
-            .add_event(1111, datetime(2026, 7, 5, 9, 30))
-            .add_event(1121, datetime(2026, 7, 12, 9, 30))
-            .add_event(1131, datetime(2026, 7, 19, 9, 30))
+            .add_event(1111, datetime(2026, 8, 9, 9, 30))
+            .add_event(1121, datetime(2026, 8, 16, 9, 30))
+            .add_event(1131, datetime(2026, 8, 23, 9, 30))
             .with_next(None, 8)
             .build()
         )
@@ -209,4 +209,5 @@ class TestReport:
 
         # Assert
         assert report.error_message==None
+        print(report.members)
         assert len(report.members)==2
