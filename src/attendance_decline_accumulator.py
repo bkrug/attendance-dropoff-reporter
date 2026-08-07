@@ -1,3 +1,4 @@
+import os
 from report_models import MemberAttendance, DeclineReport
 from planning_center_models import PersonDatum, EventDatum, AttendanceDatum
 from planning_center_client import PlanningCenterClient
@@ -10,6 +11,9 @@ class AttendanceDeclineAccumulator:
         planning_center_client: PlanningCenterClient
     ):
         self.http_client = planning_center_client
+        self.page_size_events = int(os.getenv("PAGE_SIZE_EVENTS", "100"))
+        self.page_size_people = int(os.getenv("PAGE_SIZE_PEOPLE", "100"))
+        self.page_size_attendance = int(os.getenv("PAGE_SIZE_ATTENDANCE", "100"))
     
     def get_members_with_declining_attendance(
             self,
@@ -113,29 +117,29 @@ class AttendanceDeclineAccumulator:
         ):
         earliest_date = start_date.date().isoformat()
         latest_date = end_date.date().isoformat()
-        events_response = self.http_client.get_events(group_id, earliest_date, latest_date, 0, 25)
+        events_response = self.http_client.get_events(group_id, earliest_date, latest_date, 0, self.page_size_events)
         events = list(events_response.data)
         while events_response.meta.next is not None:
-            events_response = self.http_client.get_events(group_id, earliest_date, latest_date, events_response.meta.next.offset, 25)
+            events_response = self.http_client.get_events(group_id, earliest_date, latest_date, events_response.meta.next.offset, self.page_size_events)
             events.extend(events_response.data)
         return events
 
     #TODO: Prevent either of this methods from entering an infinite loop
     #TODO: Page Size should somehow be configurable
     def _get_list_of_people(self, group_id):
-        people_response = self.http_client.get_people(group_id, 0, 25)
+        people_response = self.http_client.get_people(group_id, 0, self.page_size_people)
         people = list(people_response.data)
         while people_response.meta.next is not None:
-            people_response = self.http_client.get_people(group_id, people_response.meta.next.offset, 25)
+            people_response = self.http_client.get_people(group_id, people_response.meta.next.offset, self.page_size_people)
             people.extend(people_response.data)
         return people
 
     #TODO: Prevent either of this methods from entering an infinite loop
     #TODO: Page Size should somehow be configurable
     def _get_list_of_attendances(self, event_id):
-        attendance_response = self.http_client.get_attendances(event_id, 0, 25)
+        attendance_response = self.http_client.get_attendances(event_id, 0, self.page_size_attendance)
         attendance = list(attendance_response.data)
         while attendance_response.meta.next is not None:
-            attendance_response = self.http_client.get_attendances(event_id, attendance_response.meta.next.offset, 25)
+            attendance_response = self.http_client.get_attendances(event_id, attendance_response.meta.next.offset, self.page_size_attendance)
             attendance.extend(attendance_response.data)
         return attendance
