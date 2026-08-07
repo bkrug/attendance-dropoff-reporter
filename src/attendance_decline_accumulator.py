@@ -1,8 +1,8 @@
 from report_models import MemberAttendance, DeclineReport
-from planning_center_models import PersonDatum, EventDatum
+from planning_center_models import PersonDatum, EventDatum, AttendanceDatum
 from planning_center_client import PlanningCenterClient
 from operator import methodcaller
-from datetime import datetime
+from datetime import datetime, date
 
 class AttendanceDeclineAccumulator:
     def __init__(
@@ -32,8 +32,8 @@ class AttendanceDeclineAccumulator:
         if len(events)==0:
             return DeclineReport("Group has no events (worship services)", [])
 
-        early_events = [event for event in events if event.attributes.starts_at < middle_date]
-        late_events = [event for event in events if event.attributes.starts_at >= middle_date]
+        early_events = self.group_events_by_date(event for event in events if event.attributes.starts_at < middle_date)
+        late_events = self.group_events_by_date(event for event in events if event.attributes.starts_at >= middle_date)
 
         early_attendance = self.get_attendance_by_person_id(people, early_events)
         late_attendance = self.get_attendance_by_person_id(people, late_events)
@@ -61,14 +61,35 @@ class AttendanceDeclineAccumulator:
         )
         return DeclineReport(None, declining_attendance)
 
-    def get_attendance_by_person_id(self, people: list[PersonDatum], events: list[EventDatum]):
-        attendance_by_people_id = {person.id: 0 for person in people}
+    # Claude code claims that we could remove this for-loop by using the itertools library.
+    # "from itertools import groupby"
+    # The problem is that it would only catch _consequtive_ matching keys.
+    def group_events_by_date(self, events: list[EventDatum]) -> dict[date, list[EventDatum]]:
+        grouped: dict[date, list[EventDatum]] = {}
         for event in events:
-            attendances = self.get_list_of_attendances(event.id)
-            for attendance in (a for a in attendances if a.attributes.attended):
-                person_id = attendance.relationships.person.data.id
+            grouped.setdefault(event.attributes.starts_at.date(), []).append(event)
+        return grouped
+
+    def get_attendance_by_person_id(self, people: list[PersonDatum], events_by_date: dict[date, list[EventDatum]]):
+        attendance_by_people_id = {person.id: 0 for person in people}
+        for cur_date in events_by_date.keys():
+            events_on_this_date = events_by_date[cur_date]
+            #List flattening: We do not want the list of events to result in a list of lists of attendances
+            attendance_by_person_id = self.group_attendance_by_person_id(
+                [attendance for event in events_on_this_date for attendance in self.get_list_of_attendances(event.id)]
+            )
+            people_who_attended = [person_id for person_id, attended in attendance_by_person_id.items() if attended]
+            for person_id in people_who_attended:
                 attendance_by_people_id[person_id] += 1
         return attendance_by_people_id
+
+    def group_attendance_by_person_id(self, attendances: list[AttendanceDatum]) -> dict[int, bool]:
+        grouped: dict[int, bool] = {}
+        for attendance in attendances:
+            person_id = attendance.relationships.person.data.id
+            grouped.setdefault(person_id, False)
+            grouped[person_id] = grouped[person_id] or attendance.attributes.attended
+        return grouped
 
     #TODO: Prevent either of this methods from entering an infinite loop
     #TODO: Page Size should somehow be configurable
