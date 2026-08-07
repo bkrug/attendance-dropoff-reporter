@@ -2,7 +2,7 @@ import json
 import os
 import sys
 from dataclasses import asdict
-from datetime import date, datetime
+from datetime import datetime
 from zoneinfo import ZoneInfo
 
 sys.path.insert(0, os.path.join(os.path.dirname(os.path.abspath(__file__)), "src"))
@@ -17,8 +17,8 @@ accumulator = AttendanceDeclineAccumulator(httpClient)
 
 attendance_report = accumulator.get_members_with_declining_attendance(
     "Sure Foundation Attendance",
-    datetime(2026, 6, 1, tzinfo=EASTERN),
-    datetime(2026, 7, 1, tzinfo=EASTERN),
+    datetime(2026, 5, 31, tzinfo=EASTERN),
+    datetime(2026, 7, 5, tzinfo=EASTERN),
     datetime(2026, 8, 8, tzinfo=EASTERN),
     .10
 )
