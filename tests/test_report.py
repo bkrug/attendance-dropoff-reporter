@@ -7,6 +7,7 @@ from .group_people_get_response_builder import GroupPeopleGetResponseBuilder
 from .event_attendances_get_response_builder import EventAttendancesGetResponseBuilder
 from .fake_planning_center_client_builder import FakePlanningCenterClientBuilder
 from attendance_decline_accumulator import AttendanceDeclineAccumulator
+from report_models import MemberAttendance
 
 def record_events_that_person_attended(
         attendanceBuildersByEventId: dict[int, EventAttendancesGetResponseBuilder],
@@ -208,6 +209,27 @@ class TestReport:
         report = accumulator.get_members_with_declining_attendance(group_name)
 
         # Assert
+        expected_attendance = [
+            MemberAttendance(
+                DECREASE_HIGH_FIRST_NAME,
+                DECREASE_HIGH_LAST_NAME,
+                4,
+                4,
+                1,
+                4
+            ),
+            MemberAttendance(
+                DECREASE_MEDIUM_FIRST_NAME,
+                DECREASE_MEDIUM_LAST_NAME,
+                4,
+                4,
+                2,
+                4
+            )
+        ]
         assert report.error_message==None
-        print(report.members)
-        assert len(report.members)==2
+        assert len(expected_attendance)==len(report.members)
+        assert expected_attendance[0]==report.members[0]
+        assert expected_attendance[1]==report.members[1]
+
+# TODO: Test situations where there is more than one service on the same day
