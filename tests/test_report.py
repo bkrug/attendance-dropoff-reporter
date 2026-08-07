@@ -30,7 +30,7 @@ class TestReport:
             datetime(2026, 7, 5),
             datetime(2026, 8, 2),
             datetime(2026, 8, 29),
-            0.25001)
+            0.25)
         
         #Assert
         assert actual_report.error_message=="Group not found"
@@ -54,7 +54,7 @@ class TestReport:
             datetime(2026, 7, 5),
             datetime(2026, 8, 2),
             datetime(2026, 8, 29),
-            0.25001)
+            0.25)
 
         #Assert
         assert actual_report.error_message=="Group has no people"
@@ -78,10 +78,97 @@ class TestReport:
             datetime(2026, 7, 5),
             datetime(2026, 8, 2),
             datetime(2026, 8, 29),
-            0.25001)
+            0.25)
 
         #Assert
         assert actual_report.error_message=="Group has no events (worship services)"
+
+    def testReport_earlyPeriodHasNoEvents_expectErrorMsg(self):
+        group_response = GroupsGetResponseBuilder().add_group(30, "Hope Lutheran's Attendance").build()
+        people_response = GroupPeopleGetResponseBuilder().add_person(200, "Alice", "Anderson").build()
+        events_response = (
+            GroupEventsGetResponseBuilder()
+            .add_event(50, datetime(2026, 8, 9, 9, 30))
+            .add_event(51, datetime(2026, 8, 16, 9, 30))
+            .build()
+        )
+        client = (
+            FakePlanningCenterClientBuilder()
+            .with_group_response(group_response)
+            .add_people_response(people_response)
+            .add_events_response(events_response)
+            .build()
+        )
+        accumulator = AttendanceDeclineAccumulator(client)
+
+        #Act
+        actual_report = accumulator.get_members_with_declining_attendance(
+            "Hope Lutheran's Attendance",
+            datetime(2026, 7, 5),
+            datetime(2026, 8, 2),
+            datetime(2026, 8, 29),
+            0.25)
+
+        #Assert
+        assert actual_report.error_message=="Group has no events in the early period"
+
+    def testReport_latePeriodHasNoEvents_expectErrorMsg(self):
+        group_response = GroupsGetResponseBuilder().add_group(31, "St. John's Attendance").build()
+        people_response = GroupPeopleGetResponseBuilder().add_person(201, "Brian", "Baker").build()
+        events_response = (
+            GroupEventsGetResponseBuilder()
+            .add_event(52, datetime(2026, 7, 12, 9, 30))
+            .add_event(53, datetime(2026, 7, 19, 9, 30))
+            .build()
+        )
+        client = (
+            FakePlanningCenterClientBuilder()
+            .with_group_response(group_response)
+            .add_people_response(people_response)
+            .add_events_response(events_response)
+            .build()
+        )
+        accumulator = AttendanceDeclineAccumulator(client)
+
+        #Act
+        actual_report = accumulator.get_members_with_declining_attendance(
+            "St. John's Attendance",
+            datetime(2026, 7, 5),
+            datetime(2026, 8, 2),
+            datetime(2026, 8, 29),
+            0.25001)
+
+        #Assert
+        assert actual_report.error_message=="Group has no events in the late period"
+
+    def testReport_declineThresholdOutOfRange_expectErrorMsg(self):
+        group_response = GroupsGetResponseBuilder().add_group(32, "St. Paul's Attendance").build()
+        people_response = GroupPeopleGetResponseBuilder().add_person(202, "Carol", "Chen").build()
+        events_response = (
+            GroupEventsGetResponseBuilder()
+            .add_event(54, datetime(2026, 7, 12, 9, 30))
+            .add_event(55, datetime(2026, 8, 9, 9, 30))
+            .build()
+        )
+        client = (
+            FakePlanningCenterClientBuilder()
+            .with_group_response(group_response)
+            .add_people_response(people_response)
+            .add_events_response(events_response)
+            .build()
+        )
+        accumulator = AttendanceDeclineAccumulator(client)
+
+        #Act
+        actual_report = accumulator.get_members_with_declining_attendance(
+            "St. Paul's Attendance",
+            datetime(2026, 7, 5),
+            datetime(2026, 8, 2),
+            datetime(2026, 8, 29),
+            1.5)
+
+        #Assert
+        assert actual_report.error_message=="Decline threshold must be between 0 and 1"
 
     def testReport_groupExistsWithData_expectReportComparingEarly4WeeksWithLate4Weeks(self):
         MEMBER_NEVER_ATTENDED = 103
