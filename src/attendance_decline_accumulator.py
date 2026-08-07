@@ -25,10 +25,9 @@ class AttendanceDeclineAccumulator:
         attendance_by_people_id = {person.id: 0 for person in people}
         for event in events:
             attendances = self.get_list_of_attendances(event.id)
-            for attendance in attendances:
+            for attendance in (a for a in attendances if a.attributes.attended):
                 person_id = attendance.relationships.person.data.id
-                if attendance.attributes.attended:
-                    attendance_by_people_id[person_id] += 1
+                attendance_by_people_id[person_id] += 1
 
         return DeclineReport(None, [])
 

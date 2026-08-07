@@ -199,8 +199,8 @@ class TestReport:
             .add_events_response(events_response_1)
             .add_events_response(events_response_2)
         )
-        for builder in attendance_builders_by_event_id.values():
-            client_builder.add_attendances_response(builder.build())
+        for event_id in attendance_builders_by_event_id.keys():
+            client_builder.add_attendances_response(event_id, attendance_builders_by_event_id[event_id].build())
         client = client_builder.build()
         accumulator = AttendanceDeclineAccumulator(client)
 
