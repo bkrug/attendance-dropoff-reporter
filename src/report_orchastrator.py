@@ -34,32 +34,42 @@ class ReportOrchastrator:
         )
 
         if attendance_report.error_message==None:
-            self._write_attendance_report_to_excel(attendance_report.members, "test_output/attendance_report.xlsx")
+            self._write_attendance_report_to_excel(attendance_report.members, start_date, middle_date, "test_output/attendance_report.xlsx")
         else:
             print("Could not generate report: " + attendance_report.error_message)
 
-    def _write_attendance_report_to_excel(self, members: list[MemberAttendance], path: str) -> None:
+    def _write_attendance_report_to_excel(self, members: list[MemberAttendance], start_date: datetime, middle_date: datetime, path: str) -> None:
         workbook = Workbook()
         sheet = workbook.active
         sheet.title = "Declining Attendance"
-        HEADER_ROW = 1
+        TITLE_ROW = 1
+        HEADER_ROW = 3
+        TITLE_FONT_SIZE = 16
 
         headers = [
             "First Name",
             "Last Name",
             "Early Period Attendance",
-            "Early Period Record Count",
+            "Worship Day Count",
             "Early Period Frequency",
             "Late Period Attendance",
-            "Late Period Record Count",
+            "Worship Day Count",
             "Late Period Frequency",
             "Frequency Change",
-        ]
+        ]        
+
+        title = f"Attendance Comparison between Period Starting {start_date.date().isoformat()} and Period Starting {middle_date.date().isoformat()}"
+        title_cell = sheet.cell(row=TITLE_ROW, column=1, value=title)
+        sheet.merge_cells(start_row=TITLE_ROW, start_column=1, end_row=TITLE_ROW, end_column=len(headers))
+        title_cell.alignment = Alignment(horizontal="center")
+        # No name= set here, matching Font(bold=True) below (also no name=), so both inherit the workbook's theme font.
+        title_cell.font = Font(size=TITLE_FONT_SIZE)
 
         PERCENTAGE_FORMAT = "0%"
         PERCENTAGE_COLUMN_HEADERS = ["Early Period Frequency", "Late Period Frequency", "Frequency Change"]
         percentage_columns = [get_column_letter(headers.index(header) + 1) for header in PERCENTAGE_COLUMN_HEADERS]
 
+        sheet.append([])
         sheet.append(headers)
         sheet.row_dimensions[HEADER_ROW].height = 30
         for column_index, cell in enumerate(sheet[HEADER_ROW], start=1):
