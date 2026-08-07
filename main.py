@@ -19,7 +19,7 @@ attendance_report = accumulator.get_members_with_declining_attendance(
     "Sure Foundation Attendance",
     datetime(2026, 6, 1, tzinfo=EASTERN),
     datetime(2026, 7, 1, tzinfo=EASTERN),
-    datetime(2026, 8, 31, tzinfo=EASTERN),
+    datetime(2026, 8, 8, tzinfo=EASTERN),
     .10
 )
 
