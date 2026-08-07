@@ -1,7 +1,7 @@
 from report_models import MemberAttendance, DeclineReport
 from planning_center_client import PlanningCenterClient
 from operator import methodcaller
-import datetime as dt
+from datetime import datetime
 
 class AttendanceDeclineAccumulator:
     def __init__(
@@ -10,7 +10,14 @@ class AttendanceDeclineAccumulator:
     ):
         self.http_client = planning_center_client
     
-    def get_members_with_declining_attendance(self, group_name: str) -> DeclineReport:
+    def get_members_with_declining_attendance(
+            self,
+            group_name: str,
+            start_date: datetime,
+            middle_date: datetime,
+            end_date: datetime,
+            decline_threshold: float
+        ) -> DeclineReport:
         group_response = self.http_client.get_group(group_name)
         if group_response.meta.total_count==0:
             return DeclineReport("Group not found", [])
@@ -24,8 +31,8 @@ class AttendanceDeclineAccumulator:
         if len(events)==0:
             return DeclineReport("Group has no events (worship services)", [])
 
-        early_events = [event for event in events if event.attributes.starts_at < dt.datetime(2026, 8, 2)]
-        late_events = [event for event in events if event.attributes.starts_at >= dt.datetime(2026, 8, 2)]
+        early_events = [event for event in events if event.attributes.starts_at < datetime(2026, 8, 2)]
+        late_events = [event for event in events if event.attributes.starts_at >= datetime(2026, 8, 2)]
 
         early_attendance = self.get_attendance_by_person_id(people, early_events)
         late_attendance = self.get_attendance_by_person_id(people, late_events)
@@ -47,8 +54,7 @@ class AttendanceDeclineAccumulator:
                 member_attendance
                 for member_attendance
                 in attendance_comparisons
-                #TODO: This threshold should be configurable
-                if member_attendance.frequency_change() < -0.26
+                if member_attendance.frequency_change() < -decline_threshold
             ),
             key=methodcaller("frequency_change")
         )

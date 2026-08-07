@@ -25,8 +25,13 @@ class TestReport:
         accumulator = AttendanceDeclineAccumulator(client)
 
         #Act
-        actual_report = accumulator.get_members_with_declining_attendance("St. Lucas Attendance")
-
+        actual_report = accumulator.get_members_with_declining_attendance(
+            "St. Lucas Attendance",
+            datetime(2026, 7, 5),
+            datetime(2026, 8, 2),
+            datetime(2026, 8, 29),
+            0.25001)
+        
         #Assert
         assert actual_report.error_message=="Group not found"
 
@@ -44,7 +49,12 @@ class TestReport:
         accumulator = AttendanceDeclineAccumulator(client)
 
         #Act
-        actual_report = accumulator.get_members_with_declining_attendance("St. Mark's Attendance")
+        actual_report = accumulator.get_members_with_declining_attendance(
+            "St. Mark's Attendance",
+            datetime(2026, 7, 5),
+            datetime(2026, 8, 2),
+            datetime(2026, 8, 29),
+            0.25001)
 
         #Assert
         assert actual_report.error_message=="Group has no people"
@@ -63,7 +73,12 @@ class TestReport:
         accumulator = AttendanceDeclineAccumulator(client)
 
         #Act
-        actual_report = accumulator.get_members_with_declining_attendance("St. James Attendance")
+        actual_report = accumulator.get_members_with_declining_attendance(
+            "St. James Attendance",
+            datetime(2026, 7, 5),
+            datetime(2026, 8, 2),
+            datetime(2026, 8, 29),
+            0.25001)
 
         #Assert
         assert actual_report.error_message=="Group has no events (worship services)"
@@ -206,25 +221,30 @@ class TestReport:
         accumulator = AttendanceDeclineAccumulator(client)
 
         # Act
-        report = accumulator.get_members_with_declining_attendance(group_name)
+        report = accumulator.get_members_with_declining_attendance(
+            group_name,
+            datetime(2026, 7, 5),
+            datetime(2026, 8, 2),
+            datetime(2026, 8, 29),
+            0.25001)
 
         # Assert
         expected_attendance = [
             MemberAttendance(
-                DECREASE_HIGH_FIRST_NAME,
-                DECREASE_HIGH_LAST_NAME,
-                4,
-                4,
-                1,
-                4
+                first_name=DECREASE_HIGH_FIRST_NAME,
+                last_name=DECREASE_HIGH_LAST_NAME,
+                early_period_attendance=4,
+                early_period_record_count=4,
+                late_period_attendance=1,
+                late_period_record_count=4
             ),
             MemberAttendance(
-                DECREASE_MEDIUM_FIRST_NAME,
-                DECREASE_MEDIUM_LAST_NAME,
-                4,
-                4,
-                2,
-                4
+                first_name=DECREASE_MEDIUM_FIRST_NAME,
+                last_name=DECREASE_MEDIUM_LAST_NAME,
+                early_period_attendance=4,
+                early_period_record_count=4,
+                late_period_attendance=2,
+                late_period_record_count=4
             )
         ]
         assert report.error_message==None
