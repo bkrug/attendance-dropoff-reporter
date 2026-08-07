@@ -8,6 +8,15 @@ from .event_attendances_get_response_builder import EventAttendancesGetResponseB
 from .fake_planning_center_client_builder import FakePlanningCenterClientBuilder
 from attendance_decline_accumulator import AttendanceDeclineAccumulator
 
+def record_events_that_person_attended(
+        attendanceBuildersByEventId: dict[int, EventAttendancesGetResponseBuilder],
+        person_id: int,
+        attended_event_ids
+    ):
+    for eventId in attendanceBuildersByEventId.keys():
+        attendanceBuildersByEventId[eventId].add_attendance(person_id, eventId in attended_event_ids)
+
+
 class TestReport:
     def testReport_groupDoesNotExist_expectErrorMsg(self):
         emptyGroupResponse = GroupsGetResponseBuilder().build()
@@ -58,91 +67,127 @@ class TestReport:
         #Assert
         assert actual_report.error_message=="Group has no events (worship services)"
 
-    def testReport_groupExistsWithData_expectSomeResults(self):
-        ATTENDANCE_STEADY_HIGH = 101
-        ATTENDANCE_STEADY_LOW = 105
-        ATTENDANCE_NEVER = 103
-        ATTENDANCE_INCREASE = 107
-        ATTENDANCE_DECREASE_SMALL = 106
-        ATTENDANCE_DECREASE_MEDIUM = 102
-        ATTENDANCE_DECREASE_HIGH = 104
+    def testReport_groupExistsWithData_expectReportComparingEarly4WeeksWithLate4Weeks(self):
+        MEMBER_NEVER_ATTENDED = 103
+        MEMBER_CONSISTENT_HIGH = 101
+        MEMBER_CONSISTENT_LOW = 105
+        MEMBER_ATTENDANCE_INCREASED = 107
+        MEMBER_DECREASE_SMALL = 106
+        MEMBER_DECREASE_MEDIUM = 102
+        MEMBER_DECREASE_HIGH = 104
+        DECREASE_MEDIUM_FIRST_NAME = "Bill"
+        DECREASE_MEDIUM_LAST_NAME = "Birmingham"
+        DECREASE_HIGH_FIRST_NAME = "Dwayne"
+        DECREASE_HIGH_LAST_NAME = "Doe"
 
-        groupResponse = GroupsGetResponseBuilder().add_group(10, "Trinity Attendance").build()
+        group_name = "Trinity Attendance"
+        groupResponse = GroupsGetResponseBuilder().add_group(10, group_name).build()
         peopleResponse1 = (
             GroupPeopleGetResponseBuilder()
-            .add_person(ATTENDANCE_STEADY_HIGH, "Adicus", "Adams")
-            .add_person(ATTENDANCE_DECREASE_MEDIUM, "Bill", "Birmingham")
-            .add_person(ATTENDANCE_NEVER, "Cathy", "Clinton")
+            .add_person(MEMBER_CONSISTENT_HIGH, "Adicus", "Adams")
+            .add_person(MEMBER_DECREASE_MEDIUM, DECREASE_MEDIUM_FIRST_NAME, DECREASE_MEDIUM_LAST_NAME)
+            .add_person(MEMBER_NEVER_ATTENDED, "Cathy", "Clinton")
             .with_next(3, 7)
             .build()
         )
         peopleResponse2 = (
             GroupPeopleGetResponseBuilder()
-            .add_person(ATTENDANCE_DECREASE_HIGH, "Dwanye", "Doe")
-            .add_person(ATTENDANCE_STEADY_LOW, "Ed", "Edison")
-            .add_person(ATTENDANCE_DECREASE_SMALL, "Frank", "Finch")
+            .add_person(MEMBER_DECREASE_HIGH, DECREASE_HIGH_FIRST_NAME, DECREASE_HIGH_LAST_NAME)
+            .add_person(MEMBER_CONSISTENT_LOW, "Ed", "Edison")
+            .add_person(MEMBER_DECREASE_SMALL, "Frank", "Finch")
             .with_next(6, 7)
             .build()
         )
         peopleResponse3 = (
             GroupPeopleGetResponseBuilder()
-            .add_person(ATTENDANCE_INCREASE, "Gerald", "Gibson")
+            .add_person(MEMBER_ATTENDANCE_INCREASED, "Gerald", "Gibson")
             .with_next(None, 7)
             .build()
         )
         eventsResponse1 = (
             GroupEventsGetResponseBuilder()
-            # First 4-week period
+            # Early 4-week period
             .add_event(1001, datetime(2026, 7, 5, 9, 30))
-            .add_event(1002, datetime(2026, 7, 5, 11, 30))
             .add_event(1011, datetime(2026, 7, 12, 9, 30))
-            .add_event(1012, datetime(2026, 7, 12, 11, 30))
             .add_event(1021, datetime(2026, 7, 19, 9, 30))
-            .add_event(1022, datetime(2026, 7, 19, 11, 30))
             .add_event(1031, datetime(2026, 7, 26, 9, 30))
-            .add_event(1032, datetime(2026, 7, 26, 11, 30))
-            # Second 4-week period
+            # Late 4-week period
             .add_event(1101, datetime(2026, 8, 2, 9, 30))
-            .add_event(1102, datetime(2026, 8, 2, 11, 30))
-            .with_next(10, 16)
+            .with_next(5, 8)
             .build()
         )
         eventsResponse2 = (
             GroupEventsGetResponseBuilder()
             .add_event(1111, datetime(2026, 7, 5, 9, 30))
-            .add_event(1112, datetime(2026, 7, 5, 11, 30))
             .add_event(1121, datetime(2026, 7, 12, 9, 30))
-            .add_event(1122, datetime(2026, 7, 12, 11, 30))
             .add_event(1131, datetime(2026, 7, 19, 9, 30))
-            .add_event(1132, datetime(2026, 7, 19, 11, 30))
-            .with_next(None, 16)
+            .with_next(None, 8)
             .build()
         )
-        SERVICE_9_30_MODULUS = 0
-        SERVICE_11_30_MODULUS = 1
-
-        goes_to_9_30 = [ATTENDANCE_STEADY_LOW, ATTENDANCE_INCREASE, ATTENDANCE_DECREASE_SMALL, ATTENDANCE_DECREASE_HIGH]
-        goes_to_11_30 = [ATTENDANCE_STEADY_HIGH, ATTENDANCE_INCREASE, ATTENDANCE_DECREASE_MEDIUM]
 
         allEventIds = (
             [event.id for event in eventsResponse1.data] +
             [event.id for event in eventsResponse2.data]
         )
+        half_of_ids = int(len(allEventIds)/ 2)
+        earlyPeriodEventIds = allEventIds[:half_of_ids]
+        latePeriodEventIds = allEventIds[half_of_ids:]
 
         attendanceBuildersByEventId = {eventId: EventAttendancesGetResponseBuilder() for eventId in allEventIds}
 
-        #ATTENDANCE_NEVER
-        for attendanceResponseBuilder in attendanceBuildersByEventId.values():
-            attendanceResponseBuilder.add_attendance(ATTENDANCE_NEVER, False)
-
-        #ATTENDANCE_STEADY_HIGH
-        for attendanceResponseBuilder in attendanceBuildersByEventId.values():
-            attendanceResponseBuilder.add_attendance(ATTENDANCE_STEADY_HIGH, True)
-
-        #ATTENDANCE_STEADY_LOW
-        attended_services = [1011, 1122]
-        for eventId in attendanceBuildersByEventId.keys():
-            attendanceBuildersByEventId[eventId].add_attendance(ATTENDANCE_STEADY_LOW, eventId in attended_services)
+        record_events_that_person_attended(attendanceBuildersByEventId, MEMBER_NEVER_ATTENDED, [])
+        record_events_that_person_attended(attendanceBuildersByEventId, MEMBER_CONSISTENT_HIGH, allEventIds)
+        record_events_that_person_attended(
+            attendanceBuildersByEventId,
+            MEMBER_CONSISTENT_LOW,
+            [ earlyPeriodEventIds[1], latePeriodEventIds[3] ]
+        )
+        record_events_that_person_attended(
+            attendanceBuildersByEventId,
+            MEMBER_ATTENDANCE_INCREASED,
+            [
+                earlyPeriodEventIds[2],
+                latePeriodEventIds[0],
+                latePeriodEventIds[1],
+                latePeriodEventIds[3]
+            ]
+        )
+        record_events_that_person_attended(
+            attendanceBuildersByEventId,
+            MEMBER_DECREASE_SMALL,
+            [
+                earlyPeriodEventIds[0],
+                earlyPeriodEventIds[1],
+                earlyPeriodEventIds[2],
+                earlyPeriodEventIds[3],
+                latePeriodEventIds[0],
+                latePeriodEventIds[2],
+                latePeriodEventIds[3]
+            ]
+        )
+        record_events_that_person_attended(
+            attendanceBuildersByEventId,
+            MEMBER_DECREASE_MEDIUM,
+            [
+                earlyPeriodEventIds[0],
+                earlyPeriodEventIds[1],
+                earlyPeriodEventIds[2],
+                earlyPeriodEventIds[3],
+                latePeriodEventIds[1],
+                latePeriodEventIds[3]
+            ]
+        )
+        record_events_that_person_attended(
+            attendanceBuildersByEventId,
+            MEMBER_DECREASE_HIGH,
+            [
+                earlyPeriodEventIds[0],
+                earlyPeriodEventIds[1],
+                earlyPeriodEventIds[2],
+                earlyPeriodEventIds[3],
+                latePeriodEventIds[2]
+            ]
+        )
 
         client_builder = (
             FakePlanningCenterClientBuilder()
@@ -152,4 +197,15 @@ class TestReport:
             .add_people_response(peopleResponse3)
             .add_events_response(eventsResponse1)
             .add_events_response(eventsResponse2)
-        )        
+        )
+        for builder in attendanceBuildersByEventId.values():
+            client_builder.add_attendances_response(builder.build())
+        client = client_builder.build()
+        accumulator = AttendanceDeclineAccumulator(client)
+
+        # Act
+        report = accumulator.get_members_with_declining_attendance(group_name)
+
+        # Assert
+        assert report.error_message==None
+        assert len(report.members)==2
