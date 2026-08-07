@@ -1,5 +1,6 @@
 from report_models import MemberAttendance, DeclineReport
 from planning_center_client import PlanningCenterClient
+import datetime as dt
 
 class AttendanceDeclineAccumulator:
     def __init__(
@@ -22,14 +23,24 @@ class AttendanceDeclineAccumulator:
         if len(events)==0:
             return DeclineReport("Group has no events (worship services)", [])
 
+        early_events = [event for event in events if event.attributes.starts_at < dt.datetime(2026, 8, 2)]
+        late_events = [event for event in events if event.attributes.starts_at >= dt.datetime(2026, 8, 2)]
+
+        early_attendance = self.get_attendance_by_person_id(people, early_events)
+        late_attendance = self.get_attendance_by_person_id(people, late_events)
+
+        
+
+        return DeclineReport(None, [])
+
+    def get_attendance_by_person_id(self, people, events):
         attendance_by_people_id = {person.id: 0 for person in people}
         for event in events:
             attendances = self.get_list_of_attendances(event.id)
             for attendance in (a for a in attendances if a.attributes.attended):
                 person_id = attendance.relationships.person.data.id
                 attendance_by_people_id[person_id] += 1
-
-        return DeclineReport(None, [])
+        return attendance_by_people_id
 
     #TODO: Prevent either of this methods from entering an infinite loop
     #TODO: Calculate start and end date better
