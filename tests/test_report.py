@@ -75,14 +75,15 @@ class TestReport:
         MEMBER_DECREASE_SMALL = 106
         MEMBER_DECREASE_MEDIUM = 102
         MEMBER_DECREASE_HIGH = 104
+
         DECREASE_MEDIUM_FIRST_NAME = "Bill"
         DECREASE_MEDIUM_LAST_NAME = "Birmingham"
         DECREASE_HIGH_FIRST_NAME = "Dwayne"
         DECREASE_HIGH_LAST_NAME = "Doe"
 
         group_name = "Trinity Attendance"
-        groupResponse = GroupsGetResponseBuilder().add_group(10, group_name).build()
-        peopleResponse1 = (
+        group_response = GroupsGetResponseBuilder().add_group(10, group_name).build()
+        people_response_1 = (
             GroupPeopleGetResponseBuilder()
             .add_person(MEMBER_CONSISTENT_HIGH, "Adicus", "Adams")
             .add_person(MEMBER_DECREASE_MEDIUM, DECREASE_MEDIUM_FIRST_NAME, DECREASE_MEDIUM_LAST_NAME)
@@ -90,7 +91,7 @@ class TestReport:
             .with_next(3, 7)
             .build()
         )
-        peopleResponse2 = (
+        people_response_2 = (
             GroupPeopleGetResponseBuilder()
             .add_person(MEMBER_DECREASE_HIGH, DECREASE_HIGH_FIRST_NAME, DECREASE_HIGH_LAST_NAME)
             .add_person(MEMBER_CONSISTENT_LOW, "Ed", "Edison")
@@ -98,13 +99,13 @@ class TestReport:
             .with_next(6, 7)
             .build()
         )
-        peopleResponse3 = (
+        people_response_3 = (
             GroupPeopleGetResponseBuilder()
             .add_person(MEMBER_ATTENDANCE_INCREASED, "Gerald", "Gibson")
             .with_next(None, 7)
             .build()
         )
-        eventsResponse1 = (
+        events_response_1 = (
             GroupEventsGetResponseBuilder()
             # Early 4-week period
             .add_event(1001, datetime(2026, 7, 5, 9, 30))
@@ -116,7 +117,7 @@ class TestReport:
             .with_next(5, 8)
             .build()
         )
-        eventsResponse2 = (
+        events_response_2 = (
             GroupEventsGetResponseBuilder()
             .add_event(1111, datetime(2026, 7, 5, 9, 30))
             .add_event(1121, datetime(2026, 7, 12, 9, 30))
@@ -125,80 +126,80 @@ class TestReport:
             .build()
         )
 
-        allEventIds = (
-            [event.id for event in eventsResponse1.data] +
-            [event.id for event in eventsResponse2.data]
+        all_event_ids = (
+            [event.id for event in events_response_1.data] +
+            [event.id for event in events_response_2.data]
         )
-        half_of_ids = int(len(allEventIds)/ 2)
-        earlyPeriodEventIds = allEventIds[:half_of_ids]
-        latePeriodEventIds = allEventIds[half_of_ids:]
+        half_of_ids = int(len(all_event_ids)/ 2)
+        early_period_event_ids = all_event_ids[:half_of_ids]
+        late_period_event_ids = all_event_ids[half_of_ids:]
 
-        attendanceBuildersByEventId = {eventId: EventAttendancesGetResponseBuilder() for eventId in allEventIds}
+        attendance_builders_by_event_id = {eventId: EventAttendancesGetResponseBuilder() for eventId in all_event_ids}
 
-        record_events_that_person_attended(attendanceBuildersByEventId, MEMBER_NEVER_ATTENDED, [])
-        record_events_that_person_attended(attendanceBuildersByEventId, MEMBER_CONSISTENT_HIGH, allEventIds)
+        record_events_that_person_attended(attendance_builders_by_event_id, MEMBER_NEVER_ATTENDED, [])
+        record_events_that_person_attended(attendance_builders_by_event_id, MEMBER_CONSISTENT_HIGH, all_event_ids)
         record_events_that_person_attended(
-            attendanceBuildersByEventId,
+            attendance_builders_by_event_id,
             MEMBER_CONSISTENT_LOW,
-            [ earlyPeriodEventIds[1], latePeriodEventIds[3] ]
+            [ early_period_event_ids[1], late_period_event_ids[3] ]
         )
         record_events_that_person_attended(
-            attendanceBuildersByEventId,
+            attendance_builders_by_event_id,
             MEMBER_ATTENDANCE_INCREASED,
             [
-                earlyPeriodEventIds[2],
-                latePeriodEventIds[0],
-                latePeriodEventIds[1],
-                latePeriodEventIds[3]
+                early_period_event_ids[2],
+                late_period_event_ids[0],
+                late_period_event_ids[1],
+                late_period_event_ids[3]
             ]
         )
         record_events_that_person_attended(
-            attendanceBuildersByEventId,
+            attendance_builders_by_event_id,
             MEMBER_DECREASE_SMALL,
             [
-                earlyPeriodEventIds[0],
-                earlyPeriodEventIds[1],
-                earlyPeriodEventIds[2],
-                earlyPeriodEventIds[3],
-                latePeriodEventIds[0],
-                latePeriodEventIds[2],
-                latePeriodEventIds[3]
+                early_period_event_ids[0],
+                early_period_event_ids[1],
+                early_period_event_ids[2],
+                early_period_event_ids[3],
+                late_period_event_ids[0],
+                late_period_event_ids[2],
+                late_period_event_ids[3]
             ]
         )
         record_events_that_person_attended(
-            attendanceBuildersByEventId,
+            attendance_builders_by_event_id,
             MEMBER_DECREASE_MEDIUM,
             [
-                earlyPeriodEventIds[0],
-                earlyPeriodEventIds[1],
-                earlyPeriodEventIds[2],
-                earlyPeriodEventIds[3],
-                latePeriodEventIds[1],
-                latePeriodEventIds[3]
+                early_period_event_ids[0],
+                early_period_event_ids[1],
+                early_period_event_ids[2],
+                early_period_event_ids[3],
+                late_period_event_ids[1],
+                late_period_event_ids[3]
             ]
         )
         record_events_that_person_attended(
-            attendanceBuildersByEventId,
+            attendance_builders_by_event_id,
             MEMBER_DECREASE_HIGH,
             [
-                earlyPeriodEventIds[0],
-                earlyPeriodEventIds[1],
-                earlyPeriodEventIds[2],
-                earlyPeriodEventIds[3],
-                latePeriodEventIds[2]
+                early_period_event_ids[0],
+                early_period_event_ids[1],
+                early_period_event_ids[2],
+                early_period_event_ids[3],
+                late_period_event_ids[2]
             ]
         )
 
         client_builder = (
             FakePlanningCenterClientBuilder()
-            .with_group_response(groupResponse)
-            .add_people_response(peopleResponse1)
-            .add_people_response(peopleResponse2)
-            .add_people_response(peopleResponse3)
-            .add_events_response(eventsResponse1)
-            .add_events_response(eventsResponse2)
+            .with_group_response(group_response)
+            .add_people_response(people_response_1)
+            .add_people_response(people_response_2)
+            .add_people_response(people_response_3)
+            .add_events_response(events_response_1)
+            .add_events_response(events_response_2)
         )
-        for builder in attendanceBuildersByEventId.values():
+        for builder in attendance_builders_by_event_id.values():
             client_builder.add_attendances_response(builder.build())
         client = client_builder.build()
         accumulator = AttendanceDeclineAccumulator(client)
