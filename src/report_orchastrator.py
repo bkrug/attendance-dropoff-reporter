@@ -34,11 +34,17 @@ class ReportOrchastrator:
         )
 
         if attendance_report.error_message==None:
-            self._write_attendance_report_to_excel(attendance_report.members, start_date, middle_date, "test_output/attendance_report.xlsx")
+            self._write_attendance_report_to_excel(attendance_report.members, start_date, middle_date, "test_output/attendance_report.xlsx", "")
         else:
             print("Could not generate report: " + attendance_report.error_message)
 
-    def _write_attendance_report_to_excel(self, members: list[MemberAttendance], start_date: datetime, middle_date: datetime, path: str) -> None:
+    def _write_attendance_report_to_excel(
+            self,
+            members: list[MemberAttendance],
+            start_date: datetime,
+            middle_date: datetime,
+            excel_file_path: str,
+            email_recipients: str) -> None:
         workbook = Workbook()
         sheet = workbook.active
         sheet.title = "Declining Attendance"
@@ -93,4 +99,4 @@ class ReportOrchastrator:
             for column_letter in percentage_columns:
                 sheet[f"{column_letter}{row_index}"].number_format = PERCENTAGE_FORMAT
 
-        workbook.save(path)
+        workbook.save(excel_file_path)
