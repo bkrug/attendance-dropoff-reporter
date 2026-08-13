@@ -4,5 +4,12 @@
         "./src"
     ],
     "python.envFile": "${workspaceFolder}/.env",
-    "python.terminal.useEnvFile": true
+    "python.terminal.useEnvFile": true,
+    "azureFunctions.deploySubpath": ".",
+    "azureFunctions.scmDoBuildDuringDeployment": true,
+    "azureFunctions.pythonVenv": ".venv",
+    "azureFunctions.projectLanguage": "Python",
+    "azureFunctions.projectRuntime": "~4",
+    "debug.internalConsoleOptions": "neverOpen",
+    "azureFunctions.projectLanguageModel": 2
 }

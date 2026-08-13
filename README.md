@@ -5,11 +5,14 @@ Query Planning Center's API to detect members' whose attendence as dropped betwe
 ## Running this repo locally
 
 - run `pipenv install`
+- If using VS Code, install "Azure Function Extensions" and "Azure Functions Core Tools".
 - Copy .env.example to .env
 - Navigate here https://api.planningcenteronline.com/personal_access_tokens to create a Personal Access Token and populate the environment variables "PLANNING_CENTER_CLIENT_ID" and "PLANNING_CENTER_SECRET"
 - Populate "REPORT_EMAIL_RECIPIENTS" with your own email address
 - Navigate here "" to lock up the Azure Managed Domain and populate "REPORT_EMAIL_SENDER" with "donotreply@[the-domain-you-found]
 - Navigate here "" and populate "AZURE_EMAIL_SERVICE_CONNECTION_STRING" with ...
+- Press F1 and type "Azure: Start" and ENTER.
+- With azure.py open, press F5.
 
 ## Planning Center
 

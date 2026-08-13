@@ -1,0 +1,13 @@
+# Uncomment to enable Azure Monitor OpenTelemetry
+# Ref: aka.ms/functions-azure-monitor-python
+# azure-monitor-opentelemetry
+
+# Ben K. would like to use pipenv instead of venv.
+# But upon deploy, Azure will look at requirements.txt in order to install stuff.
+
+azure-functions
+requests
+pydantic
+python-dotenv
+openpyxl
+azure-communication-email
