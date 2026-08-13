@@ -4,10 +4,7 @@ import sys
 import time
 from collections import deque
 from http import HTTPStatus
-from dotenv import load_dotenv
 from planning_center_models import GroupPeopleGetResponse, GroupEventsGetResponse, EventAttendancesGetResponse, GroupsGetResponse
-
-load_dotenv()
 
 class PlanningCenterClient:
     def __init__(self):

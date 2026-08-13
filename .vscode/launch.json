@@ -5,7 +5,7 @@
             "name": "Python: Run Report",
             "type": "debugpy",
             "request": "launch",
-            "program": "${workspaceFolder}/function_app.py",
+            "program": "${workspaceFolder}/orchastration.py",
             "console": "integratedTerminal",
             "cwd": "${workspaceFolder}",
             "envFile": "${workspaceFolder}/.env"
@@ -27,7 +27,7 @@
                 "host": "localhost",
                 "port": 9091
             },
-            "preLaunchTask": "func: host start"
+            "preLaunchTask": "func: host start",
         }
     ]
 }

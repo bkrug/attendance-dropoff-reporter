@@ -12,6 +12,9 @@ from planning_center_client import PlanningCenterClient
 from attendance_decline_accumulator import AttendanceDeclineAccumulator
 from report_models import MemberAttendance
 from azure.communication.email import EmailClient
+from dotenv import load_dotenv
+
+load_dotenv()
 
 class ReportOrchastrator:
     def __init__(self):
