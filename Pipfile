@@ -8,6 +8,7 @@ requests = "*"
 pydantic = "*"
 python-dotenv = "*"
 openpyxl = "*"
+azure-communication-email = "*"
 
 [dev-packages]
 pytest = "*"
