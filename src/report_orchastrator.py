@@ -40,6 +40,8 @@ class ReportOrchastrator:
             group_name, start_date, middle_date, end_date, decline_threshold
         )
 
+        excel_email_recipients = os.getenv("REPORT_EMAIL_RECIPIENTS", "")
+
         if attendance_report.error_message==None:
             excel_bytes = self._get_attendance_report_as_bytes(
                 attendance_report.members,
@@ -47,14 +49,15 @@ class ReportOrchastrator:
                 middle_date,
             )
             excel_file_path = os.getenv("REPORT_FILE_PATH", "")
-            excel_email_recipients = os.getenv("REPORT_EMAIL_RECIPIENTS", "")
             if excel_file_path:
                 with open(excel_file_path, "wb") as excel_file:
                     excel_file.write(excel_bytes.getvalue())
             if excel_email_recipients:
-                self._send_email(excel_bytes, excel_email_recipients)
+                self._send_email(excel_bytes, excel_email_recipients, start_date, middle_date)
         else:
             logging.error("Could not generate report: " + attendance_report.error_message)
+            if excel_email_recipients:
+                self._send_error_email(attendance_report.error_message, excel_email_recipients)
 
     def _get_attendance_report_as_bytes(
             self,
@@ -80,7 +83,7 @@ class ReportOrchastrator:
             "Frequency Change",
         ]        
 
-        title = f"Attendance Comparison between Period Starting {start_date.date().isoformat()} and Period Starting {middle_date.date().isoformat()}"
+        title = self.get_title(start_date, middle_date)
         title_cell = sheet.cell(row=TITLE_ROW, column=1, value=title)
         sheet.merge_cells(start_row=TITLE_ROW, start_column=1, end_row=TITLE_ROW, end_column=len(headers))
         title_cell.alignment = Alignment(horizontal="center")
@@ -119,11 +122,16 @@ class ReportOrchastrator:
         workbook.save(excel_bytes)
         return excel_bytes
 
-    def _send_email(self, excel_bytes: BytesIO, recipient_list: str):
-        connection_string = os.getenv("AZURE_EMAIL_SERVICE_CONNECTION_STRING", "")
-        sender_address = os.getenv("REPORT_EMAIL_SENDER", "donotreply@example.com")
+    def get_title(self, start_date, middle_date):
+        title = f"Attendance Comparison between Period Starting {start_date.date().isoformat()} and Period Starting {middle_date.date().isoformat()}"
+        return title
 
-        POLLER_WAIT_TIME = 10
+    def _send_email(self,
+            excel_bytes: BytesIO,
+            recipient_list: str,
+            start_date: datetime,
+            middle_date: datetime):
+        sender_address = os.getenv("REPORT_EMAIL_SENDER", "donotreply@example.com")
 
         message = {
             "senderAddress": sender_address,
@@ -135,9 +143,9 @@ class ReportOrchastrator:
                 ],
             },
             "content": {
-                "subject": "Test email from Python Sample",
-                "plainText": "This is plaintext body of test email.",
-                "html": "<html><h1>This is the html body of test email.</h1></html>",
+                "subject": self.get_title(start_date, middle_date),
+                "plainText": "Please see the attached attendance decline report.",
+                "html": "<html><p>Please see the attached attendance decline report.</p></html>",
             },
             "attachments": [
                 {
@@ -145,8 +153,50 @@ class ReportOrchastrator:
                     "contentType": "application/vnd.openxmlformats-officedocument.spreadsheetml.sheet",  # MIME type of the content being attached. Required.
                     "name": "attendanceDeclineReport.xlsx"  # Name of the attachment. Required.
                 }
-            ]    
+            ]
         }
+
+        self._send_message(message)
+
+    def _send_error_email(self, error_message: str, recipient_list: str):
+        sender_address = os.getenv("REPORT_EMAIL_SENDER", "donotreply@example.com")
+
+        body_lines = [
+            f"Could not generate the attendance decline report: {error_message}",
+            "",
+            "Environment settings:",
+            f"RATE_LIMIT_MAX_REQUESTS={os.getenv('RATE_LIMIT_MAX_REQUESTS', '')}",
+            f"RATE_LIMIT_WINDOW_SECONDS={os.getenv('RATE_LIMIT_WINDOW_SECONDS', '')}",
+            f"LOG_RESPONSE_TEXT={os.getenv('LOG_RESPONSE_TEXT', '')}",
+            f"PAGE_SIZE_EVENTS={os.getenv('PAGE_SIZE_EVENTS', '')}",
+            f"PAGE_SIZE_PEOPLE={os.getenv('PAGE_SIZE_PEOPLE', '')}",
+            f"PAGE_SIZE_ATTENDANCE={os.getenv('PAGE_SIZE_ATTENDANCE', '')}",
+            f"GROUP_NAME={os.getenv('GROUP_NAME', '')}",
+            f"COMPARISON_SIZE_WEEKS={os.getenv('COMPARISON_SIZE_WEEKS', '')}",
+            f"DECLINE_THRESHOLD={os.getenv('DECLINE_THRESHOLD', '')}",
+        ]
+
+        message = {
+            "senderAddress": sender_address,
+            "recipients":  {
+                "to": [
+                    {"address": address.strip()}
+                    for address in recipient_list.split(";")
+                    if address.strip()
+                ],
+            },
+            "content": {
+                "subject": "Attendance report generation failed",
+                "plainText": "\n".join(body_lines),
+            },
+        }
+
+        self._send_message(message)
+
+    def _send_message(self, message: dict):
+        connection_string = os.getenv("AZURE_EMAIL_SERVICE_CONNECTION_STRING", "")
+
+        POLLER_WAIT_TIME = 10
 
         try:
             email_client = EmailClient.from_connection_string(connection_string)
@@ -167,6 +217,6 @@ class ReportOrchastrator:
                 logging.info(f"Successfully sent the email (operation id: {poller.result()['id']})")
             else:
                 raise RuntimeError(str(poller.result()["error"]))
-            
+
         except Exception as ex:
             logging.exception(ex)
