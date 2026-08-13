@@ -225,3 +225,4 @@ test_output/*
 __azurite_db_*__.json
 __blobstorage__/
 __queuestorage__/
+local.settings.json
