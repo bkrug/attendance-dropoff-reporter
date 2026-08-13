@@ -151,7 +151,6 @@ class AttendanceDeclineAccumulator:
         return grouped
 
     #TODO: Prevent either of this methods from entering an infinite loop
-    #TODO: Page Size should somehow be configurable
     def _get_list_of_events(
             self,
             group_id: int,
@@ -174,7 +173,6 @@ class AttendanceDeclineAccumulator:
         return Ok(events)
 
     #TODO: Prevent either of this methods from entering an infinite loop
-    #TODO: Page Size should somehow be configurable
     def _get_list_of_people(self, group_id) -> Result[list[PersonDatum], str]:
         people_response_result = self.http_client.get_people(group_id, 0, self.page_size_people)
         if people_response_result.is_err():
@@ -190,7 +188,6 @@ class AttendanceDeclineAccumulator:
         return Ok(people)
 
     #TODO: Prevent either of this methods from entering an infinite loop
-    #TODO: Page Size should somehow be configurable
     def _get_list_of_attendances(self, event_id) -> Result[list[AttendanceDatum], str]:
         attendance_response_result = self.http_client.get_attendances(event_id, 0, self.page_size_attendance)
         if attendance_response_result.is_err():
