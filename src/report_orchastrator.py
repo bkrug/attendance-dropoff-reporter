@@ -2,6 +2,7 @@ import json
 import os
 from dataclasses import asdict
 from datetime import datetime, timedelta
+from io import BytesIO
 from zoneinfo import ZoneInfo
 from openpyxl import Workbook
 from openpyxl.styles import Font, Alignment
@@ -34,7 +35,13 @@ class ReportOrchastrator:
         )
 
         if attendance_report.error_message==None:
-            self._write_attendance_report_to_excel(attendance_report.members, start_date, middle_date, "test_output/attendance_report.xlsx", "")
+            self._write_attendance_report_to_excel(
+                attendance_report.members,
+                start_date,
+                middle_date,
+                os.getenv("REPORT_FILE_PATH", ""),
+                os.getenv("REPORT_EMAIL_RECIPIENTS", ""),
+            )
         else:
             print("Could not generate report: " + attendance_report.error_message)
 
@@ -99,4 +106,9 @@ class ReportOrchastrator:
             for column_letter in percentage_columns:
                 sheet[f"{column_letter}{row_index}"].number_format = PERCENTAGE_FORMAT
 
-        workbook.save(excel_file_path)
+        excel_bytes = BytesIO()
+        workbook.save(excel_bytes)
+
+        if excel_file_path:
+            with open(excel_file_path, "wb") as excel_file:
+                excel_file.write(excel_bytes.getvalue())
