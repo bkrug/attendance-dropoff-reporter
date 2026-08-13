@@ -220,3 +220,8 @@ __marimo__/
 # Test output
 test_output/*
 .python_packages
+
+# Azurite (local Azure Storage emulator)
+__azurite_db_*__.json
+__blobstorage__/
+__queuestorage__/
