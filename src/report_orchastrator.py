@@ -1,3 +1,4 @@
+import base64
 import json
 import os
 from dataclasses import asdict
@@ -10,6 +11,9 @@ from openpyxl.utils import get_column_letter
 from planning_center_client import PlanningCenterClient
 from attendance_decline_accumulator import AttendanceDeclineAccumulator
 from report_models import MemberAttendance
+from azure.communication.email import EmailClient
+from azure.mgmt.communication import CommunicationServiceManagementClient
+from azure.identity import DefaultAzureCredential
 
 class ReportOrchastrator:
     def __init__(self):
@@ -46,7 +50,7 @@ class ReportOrchastrator:
                 with open(excel_file_path, "wb") as excel_file:
                     excel_file.write(excel_bytes.getvalue())
             if excel_email_recipients:
-                print("Emailing not yet implemented")         
+                self._send_email(excel_bytes, excel_email_recipients)
         else:
             print("Could not generate report: " + attendance_report.error_message)
 
@@ -112,3 +116,55 @@ class ReportOrchastrator:
         excel_bytes = BytesIO()
         workbook.save(excel_bytes)
         return excel_bytes
+
+    def _send_email(self, excel_bytes: BytesIO, recipient_list: str):
+        connection_string = os.getenv("AZURE_EMAIL_SERVICE_CONNECTION_STRING", "")
+        sender_address = os.getenv("REPORT_EMAIL_SENDER", "donotreply@example.com")
+
+        POLLER_WAIT_TIME = 10
+
+        message = {
+            "senderAddress": sender_address,
+            "recipients":  {
+                "to": [
+                    {"address": address.strip()}
+                    for address in recipient_list.split(";")
+                    if address.strip()
+                ],
+            },
+            "content": {
+                "subject": "Test email from Python Sample",
+                "plainText": "This is plaintext body of test email.",
+                "html": "<html><h1>This is the html body of test email.</h1></html>",
+            },
+            "attachments": [
+                {
+                    "contentInBase64": base64.b64encode(excel_bytes.getvalue()).decode("utf-8"),  # Base64 encoded contents of the attachment. Required.
+                    "contentType": "application/vnd.openxmlformats-officedocument.spreadsheetml.sheet",  # MIME type of the content being attached. Required.
+                    "name": "attendanceDeclineReport.xlsx"  # Name of the attachment. Required.
+                }
+            ]    
+        }
+
+        try:
+            email_client = EmailClient.from_connection_string(connection_string)
+
+            poller = email_client.begin_send(message);
+
+            time_elapsed = 0
+            while not poller.done():
+                print("Email send poller status: " + poller.status())
+
+                poller.wait(POLLER_WAIT_TIME)
+                time_elapsed += POLLER_WAIT_TIME
+
+                if time_elapsed > 18 * POLLER_WAIT_TIME:
+                    raise RuntimeError("Polling timed out.")
+
+            if poller.result()["status"] == "Succeeded":
+                print(f"Successfully sent the email (operation id: {poller.result()['id']})")
+            else:
+                raise RuntimeError(str(poller.result()["error"]))
+            
+        except Exception as ex:
+            print(ex)        
