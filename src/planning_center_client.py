@@ -2,6 +2,7 @@ import requests
 import os
 import sys
 import time
+import logging
 from collections import deque
 from http import HTTPStatus
 from planning_center_models import GroupPeopleGetResponse, GroupEventsGetResponse, EventAttendancesGetResponse, GroupsGetResponse
@@ -50,7 +51,7 @@ class PlanningCenterClient:
             response = requests.get(url, auth=(self.api_client_id, self.api_secret))
             self._request_timestamps.append(time.monotonic())
 
-            print(f"{response.status_code} {url}")
+            logging.info(f"{response.status_code} {url}")
 
             if response.status_code == HTTPStatus.TOO_MANY_REQUESTS:
                 time.sleep(self.rate_limit_window_seconds)

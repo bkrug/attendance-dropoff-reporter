@@ -1,5 +1,6 @@
 import base64
 import json
+import logging
 import os
 from dataclasses import asdict
 from datetime import datetime, timedelta
@@ -53,7 +54,7 @@ class ReportOrchastrator:
             if excel_email_recipients:
                 self._send_email(excel_bytes, excel_email_recipients)
         else:
-            print("Could not generate report: " + attendance_report.error_message)
+            logging.error("Could not generate report: " + attendance_report.error_message)
 
     def _get_attendance_report_as_bytes(
             self,
@@ -154,7 +155,7 @@ class ReportOrchastrator:
 
             time_elapsed = 0
             while not poller.done():
-                print("Email send poller status: " + poller.status())
+                logging.info("Email send poller status: " + poller.status())
 
                 poller.wait(POLLER_WAIT_TIME)
                 time_elapsed += POLLER_WAIT_TIME
@@ -163,9 +164,9 @@ class ReportOrchastrator:
                     raise RuntimeError("Polling timed out.")
 
             if poller.result()["status"] == "Succeeded":
-                print(f"Successfully sent the email (operation id: {poller.result()['id']})")
+                logging.info(f"Successfully sent the email (operation id: {poller.result()['id']})")
             else:
                 raise RuntimeError(str(poller.result()["error"]))
             
         except Exception as ex:
-            print(ex)        
+            logging.exception(ex)
