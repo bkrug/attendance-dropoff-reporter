@@ -12,7 +12,7 @@ Query Planning Center's API to detect members' whose attendence as dropped betwe
 - Navigate here "" to lock up the Azure Managed Domain and populate "REPORT_EMAIL_SENDER" with "donotreply@[the-domain-you-found]
 - Navigate here "" and populate "AZURE_EMAIL_SERVICE_CONNECTION_STRING" with ...
 - Press F1 and type "Azure: Start" and ENTER.
-- With azure.py open, press F5.
+- With function_app.py open, press F5.
 
 ## Planning Center
 

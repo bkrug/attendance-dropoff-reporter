@@ -5,7 +5,7 @@
             "name": "Python: Run Report",
             "type": "debugpy",
             "request": "launch",
-            "program": "${workspaceFolder}/orchastration.py",
+            "program": "${workspaceFolder}/function_app.py",
             "console": "integratedTerminal",
             "cwd": "${workspaceFolder}",
             "envFile": "${workspaceFolder}/.env"

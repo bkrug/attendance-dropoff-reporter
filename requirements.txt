@@ -4,6 +4,7 @@
 
 # Ben K. would like to use pipenv instead of venv.
 # But upon deploy, Azure will look at requirements.txt in order to install stuff.
+# If we go with Azure in the long run, we might want to use venv exclusively.
 
 azure-functions
 requests

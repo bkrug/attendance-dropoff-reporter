@@ -7,9 +7,10 @@
     "python.terminal.useEnvFile": true,
     "azureFunctions.deploySubpath": ".",
     "azureFunctions.scmDoBuildDuringDeployment": true,
-    "azureFunctions.pythonVenv": ".venv",
+    "azureFunctions.pythonVenv": "~/.local/share/virtualenvs/attendance-dropoff-reporter-lFblWien",
     "azureFunctions.projectLanguage": "Python",
     "azureFunctions.projectRuntime": "~4",
     "debug.internalConsoleOptions": "neverOpen",
-    "azureFunctions.projectLanguageModel": 2
+    "azureFunctions.projectLanguageModel": 2,
+    "AzureWebJobsStorage": "UseDevelopmentStorage=true",    
 }
