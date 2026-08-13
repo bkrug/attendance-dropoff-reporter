@@ -12,3 +12,4 @@ pydantic
 python-dotenv
 openpyxl
 azure-communication-email
+result

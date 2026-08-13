@@ -1,3 +1,4 @@
+from result import Ok, Result
 from planning_center_client import PlanningCenterClient
 from planning_center_models import GroupsGetResponse, GroupPeopleGetResponse, GroupEventsGetResponse, EventAttendancesGetResponse
 
@@ -14,17 +15,17 @@ class FakePlanningCenterClient(PlanningCenterClient):
         self._events_responses = list(events_responses) if events_responses is not None else []
         self._attendances_responses = dict(attendances_responses) if attendances_responses is not None else []
 
-    def get_group(self, group_name: str) -> GroupsGetResponse:
-        return self._require(self._group_response, "group_response")
+    def get_group(self, group_name: str) -> Result[GroupsGetResponse, str]:
+        return Ok(self._require(self._group_response, "group_response"))
 
-    def get_people(self, group_id: int, offset: int, page_size: int) -> GroupPeopleGetResponse:
-        return self._require_next(self._people_responses, "people_responses")
+    def get_people(self, group_id: int, offset: int, page_size: int) -> Result[GroupPeopleGetResponse, str]:
+        return Ok(self._require_next(self._people_responses, "people_responses"))
 
-    def get_events(self, group_id: int, earliest_date: str, latest_date: str, offset: int, page_size: int) -> GroupEventsGetResponse:
-        return self._require_next(self._events_responses, "events_responses")
+    def get_events(self, group_id: int, earliest_date: str, latest_date: str, offset: int, page_size: int) -> Result[GroupEventsGetResponse, str]:
+        return Ok(self._require_next(self._events_responses, "events_responses"))
 
-    def get_attendances(self, event_id: int, offset: int, page_size: int) -> EventAttendancesGetResponse:
-        return self._require_key(self._attendances_responses, event_id, "attendances_responses")
+    def get_attendances(self, event_id: int, offset: int, page_size: int) -> Result[EventAttendancesGetResponse, str]:
+        return Ok(self._require_key(self._attendances_responses, event_id, "attendances_responses"))
 
     def _require(self, response, param_name: str):
         if response is None:

@@ -10,6 +10,7 @@ python-dotenv = "*"
 openpyxl = "*"
 azure-communication-email = "*"
 azure-functions = "*"
+result = "*"
 
 [dev-packages]
 pytest = "*"

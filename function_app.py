@@ -9,7 +9,7 @@ from report_orchastrator import ReportOrchastrator
 
 app = func.FunctionApp()
 
-@app.timer_trigger(schedule="0 * * * * 2", arg_name="myTimer", run_on_startup=False,
+@app.timer_trigger(schedule="0 * * * * 2", arg_name="myTimer", run_on_startup=True,
               use_monitor=False)
 def AttendanceTimedReport(myTimer: func.TimerRequest) -> None:
     if myTimer.past_due:
