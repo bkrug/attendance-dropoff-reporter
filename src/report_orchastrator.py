@@ -35,23 +35,26 @@ class ReportOrchastrator:
         )
 
         if attendance_report.error_message==None:
-            self._write_attendance_report_to_excel(
+            excel_bytes = self._get_attendance_report_as_bytes(
                 attendance_report.members,
                 start_date,
                 middle_date,
-                os.getenv("REPORT_FILE_PATH", ""),
-                os.getenv("REPORT_EMAIL_RECIPIENTS", ""),
             )
+            excel_file_path = os.getenv("REPORT_FILE_PATH", "")
+            excel_email_recipients = os.getenv("REPORT_EMAIL_RECIPIENTS", "")
+            if excel_file_path:
+                with open(excel_file_path, "wb") as excel_file:
+                    excel_file.write(excel_bytes.getvalue())
+            if excel_email_recipients:
+                print("Emailing not yet implemented")         
         else:
             print("Could not generate report: " + attendance_report.error_message)
 
-    def _write_attendance_report_to_excel(
+    def _get_attendance_report_as_bytes(
             self,
             members: list[MemberAttendance],
             start_date: datetime,
-            middle_date: datetime,
-            excel_file_path: str,
-            email_recipients: str) -> None:
+            middle_date: datetime) -> BytesIO:
         workbook = Workbook()
         sheet = workbook.active
         sheet.title = "Declining Attendance"
@@ -108,7 +111,4 @@ class ReportOrchastrator:
 
         excel_bytes = BytesIO()
         workbook.save(excel_bytes)
-
-        if excel_file_path:
-            with open(excel_file_path, "wb") as excel_file:
-                excel_file.write(excel_bytes.getvalue())
+        return excel_bytes
