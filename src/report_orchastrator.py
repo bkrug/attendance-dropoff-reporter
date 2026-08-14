@@ -53,7 +53,7 @@ class ReportOrchastrator:
                 with open(excel_file_path, "wb") as excel_file:
                     excel_file.write(excel_bytes.getvalue())
             if excel_email_recipients:
-                self._send_email(excel_bytes, excel_email_recipients, start_date, middle_date)
+                self._send_email(excel_bytes, excel_email_recipients, start_date, middle_date, comparison_size_weeks, decline_threshold)
         else:
             logging.error("Could not generate report: " + attendance_report.error_message)
             if excel_email_recipients:
@@ -129,8 +129,11 @@ class ReportOrchastrator:
             excel_bytes: BytesIO,
             recipient_list: str,
             start_date: datetime,
-            middle_date: datetime):
+            middle_date: datetime,
+            week: int,
+            decline: float):
         sender_address = os.getenv("REPORT_EMAIL_SENDER", "donotreply@example.com")
+        body_text = f"Attached is a report comparing attendance between two {week} week periods and showing any decline more significant that {decline*100}%."
 
         message = {
             "senderAddress": sender_address,
@@ -143,8 +146,8 @@ class ReportOrchastrator:
             },
             "content": {
                 "subject": self.get_title(start_date, middle_date),
-                "plainText": "Please see the attached attendance decline report.",
-                "html": "<html><p>Please see the attached attendance decline report.</p></html>",
+                "plainText": body_text,
+                "html": f"<html><p>{body_text}</p></html>",
             },
             "attachments": [
                 {
