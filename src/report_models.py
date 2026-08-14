@@ -35,3 +35,8 @@ class MemberAttendance:
 class DeclineReport:
     error_message: str | None
     members: List[MemberAttendance]
+
+@dataclass
+class ReportingError:
+    send_error_email: bool
+    message: str

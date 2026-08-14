@@ -2,14 +2,16 @@ import base64
 import logging
 import os
 from io import BytesIO
+from result import Err, Ok, Result
 from azure.communication.email import EmailClient
+from report_models import ReportingError
 
 class ReportEmailSender:
     def send_report(self,
             excel_bytes: BytesIO,
             recipient_list: str,
             title: str,
-            body_text: str):
+            body_text: str) -> Result[None, ReportingError]:
         sender_address = os.getenv("REPORT_EMAIL_SENDER", "donotreply@example.com")
 
         message = {
@@ -35,9 +37,12 @@ class ReportEmailSender:
             ]
         }
 
-        self._send_message(message)
+        result = self._send_message(message)
+        if result.is_err():
+            return Err(ReportingError(send_error_email=True, message=f"Failed to send attendance report email: {result.unwrap_err()}"))
+        return Ok(None)
 
-    def send_error(self, error_message: str, recipient_list: str):
+    def send_error(self, error_message: str, recipient_list: str) -> Result[None, ReportingError]:
         sender_address = os.getenv("REPORT_EMAIL_SENDER", "donotreply@example.com")
 
         body_lines = [
@@ -70,9 +75,12 @@ class ReportEmailSender:
             },
         }
 
-        self._send_message(message)
+        result = self._send_message(message)
+        if result.is_err():
+            return Err(ReportingError(send_error_email=False, message=f"Failed to send failure notification email: {result.unwrap_err()}"))
+        return Ok(None)
 
-    def _send_message(self, message: dict):
+    def _send_message(self, message: dict) -> Result[None, str]:
         connection_string = os.getenv("AZURE_EMAIL_SERVICE_CONNECTION_STRING", "")
 
         POLLER_WAIT_TIME = 10
@@ -94,8 +102,10 @@ class ReportEmailSender:
 
             if poller.result()["status"] == "Succeeded":
                 logging.info(f"Successfully sent the email (operation id: {poller.result()['id']})")
+                return Ok(None)
             else:
                 raise RuntimeError(str(poller.result()["error"]))
 
         except Exception as ex:
             logging.exception(ex)
+            return Err(str(ex))

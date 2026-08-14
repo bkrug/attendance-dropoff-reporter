@@ -2,10 +2,12 @@ import logging
 import os
 from datetime import datetime, timedelta
 from zoneinfo import ZoneInfo
+from result import Err, Ok, Result
 from planning_center_client import PlanningCenterClient
 from attendance_decline_accumulator import AttendanceDeclineAccumulator
 from excel_report_generator import ExcelReportGenerator
 from report_email_sender import ReportEmailSender
+from report_models import ReportingError
 from dotenv import load_dotenv
 
 load_dotenv()
@@ -17,7 +19,7 @@ class ReportOrchastrator:
         self._excel_generator = ExcelReportGenerator()
         self._email_sender = ReportEmailSender()
 
-    def generate_report(self):
+    def generate_report(self) -> Result[None, ReportingError]:
         group_name = os.getenv("GROUP_NAME")
         comparison_size_weeks = int(os.getenv("COMPARISON_SIZE_WEEKS", "26"))
         decline_threshold = float(os.getenv("DECLINE_THRESHOLD", ".20"))
@@ -42,14 +44,21 @@ class ReportOrchastrator:
             body_text = f"Attached is a report comparing attendance between two {comparison_size_weeks} week periods and showing any decline more significant than {decline_threshold*100}%."
             excel_bytes = self._excel_generator.generate(attendance_report.members, title)
             if excel_email_recipients:
-                self._email_sender.send_report(excel_bytes, excel_email_recipients, title, body_text)
+                send_result = self._email_sender.send_report(excel_bytes, excel_email_recipients, title, body_text)
+                if send_result.is_err():
+                    return send_result
             if excel_file_path:
                 with open(excel_file_path, "wb") as excel_file:
                     excel_file.write(excel_bytes.getvalue())
+            return Ok(None)
         else:
             logging.error("Could not generate report: " + attendance_report.error_message)
             if excel_email_recipients:
-                self._email_sender.send_error(attendance_report.error_message, excel_email_recipients)
+                send_result = self._email_sender.send_error(attendance_report.error_message, excel_email_recipients)
+                if send_result.is_err():
+                    return send_result
+                return Err(ReportingError(send_error_email=False, message=attendance_report.error_message))
+            return Err(ReportingError(send_error_email=True, message=attendance_report.error_message))
 
     def _get_title(self, start_date, middle_date):
         title = f"Attendance Comparison between Period Starting {start_date.date().isoformat()} and Period Starting {middle_date.date().isoformat()}"
