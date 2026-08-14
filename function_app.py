@@ -27,21 +27,16 @@ def AttendanceTimedReport(myTimer: func.TimerRequest) -> None:
 
 def _handle_reporting_error(error: ReportingError) -> None:
     logging.critical("Report generation failed: " + error.message)
-
     if error.send_error_email:
-        recipients = os.getenv("REPORT_EMAIL_RECIPIENTS", "")
-        if recipients:
-            send_result = ReportEmailSender().send_error(error.message, recipients)
-            if send_result.is_err():
-                logging.critical("Failed to send failure notification email: " + send_result.unwrap_err().message)
+        _send_failure_notification(error.message)
 
 def _handle_failure(ex: Exception) -> None:
     logging.critical("Unhandled exception in AttendanceTimedReport", exc_info=ex)
+    _send_failure_notification("An uncaught exception occurred when attempting to generate an attendance report: " + str(ex))
 
-    try:
-        recipients = os.getenv("REPORT_EMAIL_RECIPIENTS", "")
-        if recipients:
-            email_msg = "An uncaught exception occurred when attempting to generate an attendance report: " + str(ex)
-            ReportEmailSender().send_error(email_msg, recipients)
-    except Exception as email_ex:
-        logging.critical("Failed to send failure notification email", exc_info=email_ex)
+def _send_failure_notification(message: str) -> None:
+    recipients = os.getenv("REPORT_EMAIL_RECIPIENTS", "")
+    if recipients:
+        send_result = ReportEmailSender().send_error(message, recipients)
+        if send_result.is_err():
+            logging.critical("Failed to send failure notification email: " + send_result.unwrap_err().message)
