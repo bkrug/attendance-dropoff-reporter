@@ -87,7 +87,6 @@ class ReportOrchastrator:
         title_cell = sheet.cell(row=TITLE_ROW, column=1, value=title)
         sheet.merge_cells(start_row=TITLE_ROW, start_column=1, end_row=TITLE_ROW, end_column=len(headers))
         title_cell.alignment = Alignment(horizontal="center")
-        # No name= set here, matching Font(bold=True) below (also no name=), so both inherit the workbook's theme font.
         title_cell.font = Font(size=TITLE_FONT_SIZE)
 
         PERCENTAGE_FORMAT = "0%"
