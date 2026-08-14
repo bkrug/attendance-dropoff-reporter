@@ -1,8 +1,6 @@
 import base64
-import json
 import logging
 import os
-from dataclasses import asdict
 from datetime import datetime, timedelta
 from io import BytesIO
 from zoneinfo import ZoneInfo
@@ -26,6 +24,8 @@ class ReportOrchastrator:
         group_name = os.getenv("GROUP_NAME")
         comparison_size_weeks = int(os.getenv("COMPARISON_SIZE_WEEKS", "26"))
         decline_threshold = float(os.getenv("DECLINE_THRESHOLD", ".20"))
+        excel_email_recipients = os.getenv("REPORT_EMAIL_RECIPIENTS", "")
+        excel_file_path = os.getenv("REPORT_FILE_PATH", "")
 
         EASTERN = ZoneInfo("America/New_York")
 
@@ -40,20 +40,15 @@ class ReportOrchastrator:
             group_name, start_date, middle_date, end_date, decline_threshold
         )
 
-        excel_email_recipients = os.getenv("REPORT_EMAIL_RECIPIENTS", "")
-
         if attendance_report.error_message==None:
-            excel_bytes = self._get_attendance_report_as_bytes(
-                attendance_report.members,
-                start_date,
-                middle_date,
-            )
-            excel_file_path = os.getenv("REPORT_FILE_PATH", "")
+            title = self._get_title(start_date, middle_date)
+            body_text = f"Attached is a report comparing attendance between two {comparison_size_weeks} week periods and showing any decline more significant that {decline_threshold*100}%."
+            excel_bytes = self._get_attendance_report_as_bytes(attendance_report.members, title)
             if excel_file_path:
                 with open(excel_file_path, "wb") as excel_file:
                     excel_file.write(excel_bytes.getvalue())
             if excel_email_recipients:
-                self._send_email(excel_bytes, excel_email_recipients, start_date, middle_date, comparison_size_weeks, decline_threshold)
+                self._send_email(excel_bytes, excel_email_recipients, title, body_text)
         else:
             logging.error("Could not generate report: " + attendance_report.error_message)
             if excel_email_recipients:
@@ -62,8 +57,7 @@ class ReportOrchastrator:
     def _get_attendance_report_as_bytes(
             self,
             members: list[MemberAttendance],
-            start_date: datetime,
-            middle_date: datetime) -> BytesIO:
+            title: str) -> BytesIO:
         workbook = Workbook()
         sheet = workbook.active
         sheet.title = "Declining Attendance"
@@ -83,7 +77,6 @@ class ReportOrchastrator:
             "Frequency Change",
         ]        
 
-        title = self.get_title(start_date, middle_date)
         title_cell = sheet.cell(row=TITLE_ROW, column=1, value=title)
         sheet.merge_cells(start_row=TITLE_ROW, start_column=1, end_row=TITLE_ROW, end_column=len(headers))
         title_cell.alignment = Alignment(horizontal="center")
@@ -121,19 +114,16 @@ class ReportOrchastrator:
         workbook.save(excel_bytes)
         return excel_bytes
 
-    def get_title(self, start_date, middle_date):
+    def _get_title(self, start_date, middle_date):
         title = f"Attendance Comparison between Period Starting {start_date.date().isoformat()} and Period Starting {middle_date.date().isoformat()}"
         return title
 
     def _send_email(self,
             excel_bytes: BytesIO,
             recipient_list: str,
-            start_date: datetime,
-            middle_date: datetime,
-            week: int,
-            decline: float):
+            title: str,
+            body_text: str):
         sender_address = os.getenv("REPORT_EMAIL_SENDER", "donotreply@example.com")
-        body_text = f"Attached is a report comparing attendance between two {week} week periods and showing any decline more significant that {decline*100}%."
 
         message = {
             "senderAddress": sender_address,
@@ -145,7 +135,7 @@ class ReportOrchastrator:
                 ],
             },
             "content": {
-                "subject": self.get_title(start_date, middle_date),
+                "subject": title,
                 "plainText": body_text,
                 "html": f"<html><p>{body_text}</p></html>",
             },
