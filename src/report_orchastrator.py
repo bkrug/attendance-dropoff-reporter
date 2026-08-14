@@ -41,11 +41,11 @@ class ReportOrchastrator:
             title = self._get_title(start_date, middle_date)
             body_text = f"Attached is a report comparing attendance between two {comparison_size_weeks} week periods and showing any decline more significant than {decline_threshold*100}%."
             excel_bytes = self._excel_generator.generate(attendance_report.members, title)
+            if excel_email_recipients:
+                self._email_sender.send_report(excel_bytes, excel_email_recipients, title, body_text)
             if excel_file_path:
                 with open(excel_file_path, "wb") as excel_file:
                     excel_file.write(excel_bytes.getvalue())
-            if excel_email_recipients:
-                self._email_sender.send_report(excel_bytes, excel_email_recipients, title, body_text)
         else:
             logging.error("Could not generate report: " + attendance_report.error_message)
             if excel_email_recipients:

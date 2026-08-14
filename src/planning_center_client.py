@@ -15,7 +15,8 @@ class PlanningCenterClient:
         self.rate_limit_max_requests = int(os.getenv("RATE_LIMIT_MAX_REQUESTS", "80"))
         self.rate_limit_window_seconds = int(os.getenv("RATE_LIMIT_WINDOW_SECONDS", "20"))
         self.log_response_text = os.getenv("LOG_RESPONSE_TEXT", "").lower()=="true" or os.getenv("LOG_RESPONSE_TEXT", "")=="1"
-        os.makedirs("test_output", exist_ok=True)
+        if self.log_response_text:
+            os.makedirs("test_output", exist_ok=True)
         self._request_timestamps = deque()
 
     def get_group(self, group_name: str) -> Result[GroupsGetResponse, str]:
