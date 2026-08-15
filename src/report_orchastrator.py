@@ -55,10 +55,7 @@ class ReportOrchastrator:
             logging.error("Could not generate report: " + attendance_report.error_message)
             if excel_email_recipients:
                 send_result = self._email_sender.send_error(attendance_report.error_message, excel_email_recipients)
-                if send_result.is_err():
-                    return send_result
-                return Err(ReportingError(send_error_email=False, message=attendance_report.error_message))
-            return Err(ReportingError(send_error_email=True, message=attendance_report.error_message))
+            return Err(ReportingError(send_error_email=False, message=attendance_report.error_message))
 
     def _get_title(self, start_date, middle_date):
         title = f"Attendance Comparison between Period Starting {start_date.date().isoformat()} and Period Starting {middle_date.date().isoformat()}"
