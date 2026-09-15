@@ -2,6 +2,7 @@ import os
 import sys
 import logging
 import azure.functions as func
+from dotenv import load_dotenv
 
 sys.path.insert(0, os.path.join(os.path.dirname(os.path.abspath(__file__)), "src"))
 
@@ -9,10 +10,11 @@ from report_orchastrator import ReportOrchastrator
 from report_email_sender import ReportEmailSender
 from report_models import ReportingError
 
+load_dotenv()
+
 app = func.FunctionApp()
 
-# Run on first Tuesday of month at 6:17 am. (Run only on Tuesdays and only on days 1-7)
-@app.timer_trigger(schedule="32 17 6 1-7 * 2", arg_name="myTimer", run_on_startup=False,
+@app.timer_trigger(schedule=os.getenv("REPORT_SCHEDULE_CRON", "32 17 6 1-7 * 2"), arg_name="myTimer", run_on_startup=False,
               use_monitor=False)
 def AttendanceTimedReport(myTimer: func.TimerRequest) -> None:
     if myTimer.past_due:
