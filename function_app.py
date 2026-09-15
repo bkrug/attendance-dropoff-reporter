@@ -11,7 +11,8 @@ from report_models import ReportingError
 
 app = func.FunctionApp()
 
-@app.timer_trigger(schedule="32 17 6 * * 2", arg_name="myTimer", run_on_startup=False,
+# Run on first Tuesday of month at 6:17 am. (Run only on Tuesdays and only on days 1-7)
+@app.timer_trigger(schedule="32 17 6 1-7 * 2", arg_name="myTimer", run_on_startup=False,
               use_monitor=False)
 def AttendanceTimedReport(myTimer: func.TimerRequest) -> None:
     if myTimer.past_due:
