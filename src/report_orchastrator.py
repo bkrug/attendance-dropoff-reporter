@@ -1,25 +1,30 @@
-import json
+import logging
 import os
-from dataclasses import asdict
 from datetime import datetime, timedelta
-from io import BytesIO
 from zoneinfo import ZoneInfo
-from openpyxl import Workbook
-from openpyxl.styles import Font, Alignment
-from openpyxl.utils import get_column_letter
+from result import Err, Ok, Result
 from planning_center_client import PlanningCenterClient
 from attendance_decline_accumulator import AttendanceDeclineAccumulator
-from report_models import MemberAttendance
+from excel_report_generator import ExcelReportGenerator
+from report_email_sender import ReportEmailSender
+from report_models import ReportingError
+from dotenv import load_dotenv
+
+load_dotenv()
 
 class ReportOrchastrator:
     def __init__(self):
         httpClient = PlanningCenterClient()
         self._accumulator = AttendanceDeclineAccumulator(httpClient)
+        self._excel_generator = ExcelReportGenerator()
+        self._email_sender = ReportEmailSender()
 
-    def generate_report(self):
+    def generate_report(self) -> Result[None, ReportingError]:
         group_name = os.getenv("GROUP_NAME")
         comparison_size_weeks = int(os.getenv("COMPARISON_SIZE_WEEKS", "26"))
         decline_threshold = float(os.getenv("DECLINE_THRESHOLD", ".20"))
+        excel_email_recipients = os.getenv("REPORT_EMAIL_RECIPIENTS", "")
+        excel_file_path = os.getenv("REPORT_FILE_PATH", "")
 
         EASTERN = ZoneInfo("America/New_York")
 
@@ -34,81 +39,24 @@ class ReportOrchastrator:
             group_name, start_date, middle_date, end_date, decline_threshold
         )
 
-        if attendance_report.error_message==None:
-            self._write_attendance_report_to_excel(
-                attendance_report.members,
-                start_date,
-                middle_date,
-                os.getenv("REPORT_FILE_PATH", ""),
-                os.getenv("REPORT_EMAIL_RECIPIENTS", ""),
-            )
+        if not attendance_report.error_message:
+            title = self._get_title(start_date, middle_date)
+            body_text = f"Attached is a report comparing attendance between two {comparison_size_weeks} week periods and showing any decline more significant than {decline_threshold*100}%."
+            excel_bytes = self._excel_generator.generate(attendance_report.members, title)
+            if excel_email_recipients:
+                send_result = self._email_sender.send_report(excel_bytes, excel_email_recipients, title, body_text)
+                if send_result.is_err():
+                    return send_result
+            if excel_file_path:
+                with open(excel_file_path, "wb") as excel_file:
+                    excel_file.write(excel_bytes.getvalue())
+            return Ok(None)
         else:
-            print("Could not generate report: " + attendance_report.error_message)
+            logging.error("Could not generate report: " + attendance_report.error_message)
+            if excel_email_recipients:
+                send_result = self._email_sender.send_error(attendance_report.error_message, excel_email_recipients)
+            return Err(ReportingError(send_error_email=False, message=attendance_report.error_message))
 
-    def _write_attendance_report_to_excel(
-            self,
-            members: list[MemberAttendance],
-            start_date: datetime,
-            middle_date: datetime,
-            excel_file_path: str,
-            email_recipients: str) -> None:
-        workbook = Workbook()
-        sheet = workbook.active
-        sheet.title = "Declining Attendance"
-        TITLE_ROW = 1
-        HEADER_ROW = 3
-        TITLE_FONT_SIZE = 16
-
-        headers = [
-            "First Name",
-            "Last Name",
-            "Early Period Attendance",
-            "Worship Day Count",
-            "Early Period Frequency",
-            "Late Period Attendance",
-            "Worship Day Count",
-            "Late Period Frequency",
-            "Frequency Change",
-        ]        
-
+    def _get_title(self, start_date, middle_date):
         title = f"Attendance Comparison between Period Starting {start_date.date().isoformat()} and Period Starting {middle_date.date().isoformat()}"
-        title_cell = sheet.cell(row=TITLE_ROW, column=1, value=title)
-        sheet.merge_cells(start_row=TITLE_ROW, start_column=1, end_row=TITLE_ROW, end_column=len(headers))
-        title_cell.alignment = Alignment(horizontal="center")
-        # No name= set here, matching Font(bold=True) below (also no name=), so both inherit the workbook's theme font.
-        title_cell.font = Font(size=TITLE_FONT_SIZE)
-
-        PERCENTAGE_FORMAT = "0%"
-        PERCENTAGE_COLUMN_HEADERS = ["Early Period Frequency", "Late Period Frequency", "Frequency Change"]
-        percentage_columns = [get_column_letter(headers.index(header) + 1) for header in PERCENTAGE_COLUMN_HEADERS]
-
-        sheet.append([])
-        sheet.append(headers)
-        sheet.row_dimensions[HEADER_ROW].height = 30
-        for column_index, cell in enumerate(sheet[HEADER_ROW], start=1):
-            cell.font = Font(bold=True)
-            cell.alignment = Alignment(wrap_text=True)
-            sheet.column_dimensions[cell.column_letter].width = 16
-
-        for member in members:
-            row_index = sheet.max_row + 1
-            sheet.append([
-                member.first_name,
-                member.last_name,
-                member.early_period_attendance,
-                member.early_period_record_count,
-                member.early_period_frequency(),
-                member.late_period_attendance,
-                member.late_period_record_count,
-                member.late_period_frequency(),
-                member.frequency_change(),
-            ])
-            for column_letter in percentage_columns:
-                sheet[f"{column_letter}{row_index}"].number_format = PERCENTAGE_FORMAT
-
-        excel_bytes = BytesIO()
-        workbook.save(excel_bytes)
-
-        if excel_file_path:
-            with open(excel_file_path, "wb") as excel_file:
-                excel_file.write(excel_bytes.getvalue())
+        return title

@@ -1,13 +1,11 @@
 import requests
 import os
-import sys
 import time
+import logging
 from collections import deque
 from http import HTTPStatus
-from dotenv import load_dotenv
+from result import Err, Ok, Result
 from planning_center_models import GroupPeopleGetResponse, GroupEventsGetResponse, EventAttendancesGetResponse, GroupsGetResponse
-
-load_dotenv()
 
 class PlanningCenterClient:
     def __init__(self):
@@ -17,43 +15,48 @@ class PlanningCenterClient:
         self.rate_limit_max_requests = int(os.getenv("RATE_LIMIT_MAX_REQUESTS", "80"))
         self.rate_limit_window_seconds = int(os.getenv("RATE_LIMIT_WINDOW_SECONDS", "20"))
         self.log_response_text = os.getenv("LOG_RESPONSE_TEXT", "").lower()=="true" or os.getenv("LOG_RESPONSE_TEXT", "")=="1"
-        os.makedirs("test_output", exist_ok=True)
+        if self.log_response_text:
+            os.makedirs("test_output", exist_ok=True)
         self._request_timestamps = deque()
 
-    def get_group(self, group_name: str) -> GroupsGetResponse:
+    def get_group(self, group_name: str) -> Result[GroupsGetResponse, str]:
         url = f"https://api.planningcenteronline.com/groups/v2/groups?where[name]={group_name}"
-        response = self._get(url, "test_output/group_response.txt")
 
         # TODO: Log serialization errors including location
-        return GroupsGetResponse.model_validate_json(response.text)
+        return self._get(url, "test_output/group_response.txt").map(
+            lambda response: GroupsGetResponse.model_validate_json(response.text)
+        )
 
-    def get_people(self, group_id: int, offset: int, page_size: int) -> GroupPeopleGetResponse:
+    def get_people(self, group_id: int, offset: int, page_size: int) -> Result[GroupPeopleGetResponse, str]:
         url = f"https://api.planningcenteronline.com/groups/v2/groups/{group_id}/people?offset={offset}&per_page={page_size}"
-        response = self._get(url, "test_output/people_response.txt")
 
         # TODO: Log serialization errors including location
-        return GroupPeopleGetResponse.model_validate_json(response.text)
+        return self._get(url, "test_output/people_response.txt").map(
+            lambda response: GroupPeopleGetResponse.model_validate_json(response.text)
+        )
 
-    def get_events(self, group_id: int, earliest_date: str, latest_date: str, offset: int, page_size: int) -> GroupEventsGetResponse:
+    def get_events(self, group_id: int, earliest_date: str, latest_date: str, offset: int, page_size: int) -> Result[GroupEventsGetResponse, str]:
         url = f"https://api.planningcenteronline.com/groups/v2/groups/{group_id}/events?order=starts_at&filter=not_canceled&where[starts_at][gte]={earliest_date}&where[ends_at][lte]={latest_date}&offset={offset}&per_page={page_size}"
-        response = self._get(url, "test_output/event_response.txt")
 
         # TODO: Log serialization errors including location
-        return GroupEventsGetResponse.model_validate_json(response.text)
+        return self._get(url, "test_output/event_response.txt").map(
+            lambda response: GroupEventsGetResponse.model_validate_json(response.text)
+        )
 
-    def get_attendances(self, event_id: int, offset: int, page_size: int) -> EventAttendancesGetResponse:
+    def get_attendances(self, event_id: int, offset: int, page_size: int) -> Result[EventAttendancesGetResponse, str]:
         url = f"https://api.planningcenteronline.com/groups/v2/events/{event_id}/attendances?offset={offset}&per_page={page_size}"
-        response = self._get(url, "test_output/attendance_response.txt")
 
-        return EventAttendancesGetResponse.model_validate_json(response.text)
+        return self._get(url, "test_output/attendance_response.txt").map(
+            lambda response: EventAttendancesGetResponse.model_validate_json(response.text)
+        )
 
-    def _get(self, url: str, debug_output_path: str) -> requests.Response:
+    def _get(self, url: str, debug_output_path: str) -> Result[requests.Response, str]:
         while True:
             self._wait_for_rate_limit()
             response = requests.get(url, auth=(self.api_client_id, self.api_secret))
             self._request_timestamps.append(time.monotonic())
 
-            print(f"{response.status_code} {url}")
+            logging.info(f"{response.status_code} {url}")
 
             if response.status_code == HTTPStatus.TOO_MANY_REQUESTS:
                 time.sleep(self.rate_limit_window_seconds)
@@ -65,10 +68,11 @@ class PlanningCenterClient:
             with open(debug_output_path, "w") as f:
                 f.write(response.text)
 
-        #TODO: Begin returning a Result<success, error> type.
-        self._exit_on_http_error(response)
+        if 400 <= response.status_code <= 599:
+            logging.error(f"{response.status_code} {response.text}")
+            return Err("Failure to communicate with Planning Center")
 
-        return response
+        return Ok(response)
 
     def _wait_for_rate_limit(self) -> None:
         now = time.monotonic()
@@ -80,7 +84,3 @@ class PlanningCenterClient:
             if seconds_until_oldest_expires > 0:
                 time.sleep(seconds_until_oldest_expires)
             self._request_timestamps.popleft()
-
-    def _exit_on_http_error(self, response: requests.Response) -> None:
-        if 400 <= response.status_code <= 599:
-            sys.exit(f"Planning Center API request to {response.url} failed with status {response.status_code}: {response.text}")

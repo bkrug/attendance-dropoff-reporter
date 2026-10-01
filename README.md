@@ -2,6 +2,18 @@
 
 Query Planning Center's API to detect members' whose attendence as dropped between an earlier and later 26-week period of time
 
+## Running this repo locally
+
+- run `pipenv install`
+- If using VS Code, install "Azure Function Extensions" and "Azure Functions Core Tools".
+- Copy .env.example to .env
+- Navigate here https://api.planningcenteronline.com/personal_access_tokens to create a Personal Access Token and populate the environment variables "PLANNING_CENTER_CLIENT_ID" and "PLANNING_CENTER_SECRET"
+- Populate "REPORT_EMAIL_RECIPIENTS" with your own email address
+- Navigate to the Email Communication Service to look up the Azure Managed Domain and populate "REPORT_EMAIL_SENDER" with "donotreply@[the-domain-you-found]
+- Navigate to the Communication Service -> Settings -> Keys and populate "AZURE_EMAIL_SERVICE_CONNECTION_STRING" with either connection string
+- Press F1 and type "Azure: Start" and ENTER.
+- With function_app.py open, press F5.
+
 ## Planning Center
 
 ### GET requests
@@ -50,3 +62,11 @@ pipx install pipenv
 If we get warning messages in an import statement despite having already installed a library to our Pipfile,
 use this command: `pipenv --venv` to find the path to an interpreter.
 In VS Code, press CTRL+SHIFT+P, and run "Python: Select Interpreter" and enter the path that was output by the previous command.
+
+## Learning Azure
+
+How to Create and Deploy an Azure function:
+https://learn.microsoft.com/en-us/azure/azure-functions/how-to-create-function-vs-code?pivots=programming-language-python
+
+Sending an email through Azure: 
+https://learn.microsoft.com/en-us/azure/communication-services/quickstarts/email/send-email?tabs=linux%2Cconnection-string%2Csend-email-and-get-status-async%2Casync-client&pivots=programming-language-python
