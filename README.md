@@ -14,6 +14,8 @@ Query Planning Center's API to detect members' whose attendence as dropped betwe
 - Press F1 and type "Azure: Start" and ENTER.
 - With function_app.py open, press F5.
 
+You will also see a file "orchastration.py". If you don't want to test Azure concepts, then you should be able to run `python3 orchastration.py`
+
 ## Planning Center
 
 ### GET requests
